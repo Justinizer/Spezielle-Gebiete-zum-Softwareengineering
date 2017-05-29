@@ -40,12 +40,12 @@ CFLAGS	= -mcpu=cortex-m3 -mthumb -Wall -Os -ffunction-sections -fdata-sections
 LFLAGS	= --gc-sections --as-needed
 
 # Quelltextdateien:
-SRC_CPP	= 
-SRC_C	= main.c uart.c gpio.c
+SRC_CPP	=
+SRC_C	= main.c uart.c gpio.c sds011.c util.c
 SRC_ASM	= startup.s
 
 # Bibliotheken:
-LIBS	= 
+LIBS	=
 
 # Dateiendungen:
 CPP_EXT 	= cpp

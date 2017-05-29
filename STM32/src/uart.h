@@ -54,8 +54,10 @@ struct usart_reg {
 #define USART_PARITY_ERROR				0b00000001	// Bit 0 PE: Parity error
 
 void init_usart(struct usart_reg *usart, int baudrate);
+void usart_wait_send_buffer(struct usart_reg *usart, const char *buffer, unsigned long len);
 void usart_wait_send_string(struct usart_reg *usart, const char *string);
 void usart_wait_send_char(struct usart_reg *usart, char character);
 char usart_wait_receive_char(struct usart_reg *usart);
+void usart_wait_receive_buffer(struct usart_reg *usart, char *buffer, unsigned long len);
 
 #endif

@@ -34,6 +34,15 @@ void init_usart(struct usart_reg *usart, int baudrate) {
 	usart->control1 = (1 << USART_RX_ENABLE_BIT) | (1 << USART_TX_ENABLE_BIT) | (1 << USART_ENABLE_BIT);
 }
 
+void usart_wait_send_buffer(struct usart_reg *usart, const char *buffer, unsigned long len) {
+	while (len > 0) {
+		while ((usart->status & USART_TRANSMIT_REGISTER_EMPTY) == 0);	// Wait for empty transmission register
+		usart->data = *buffer;
+		buffer++;
+		len--;
+	}
+}
+
 void usart_wait_send_string(struct usart_reg *usart, const char *string) {
 	while (*string) {
 		while ((usart->status & USART_TRANSMIT_REGISTER_EMPTY) == 0);	// Wait for empty transmission register
@@ -50,4 +59,13 @@ void usart_wait_send_char(struct usart_reg *usart, char character) {
 char usart_wait_receive_char(struct usart_reg *usart) {
 	while (!(usart->status & USART_READ_DATA_REG_NOT_EMPTY));	// Wait for full data register
 	return usart->data;
+}
+
+void usart_wait_receive_buffer(struct usart_reg *usart, char *buffer, unsigned long len) {
+	while (len > 0) {
+		while (!(usart->status & USART_READ_DATA_REG_NOT_EMPTY));	// Wait for full data register
+		*buffer = usart->data;
+		buffer++;
+		len--;
+	}
 }
