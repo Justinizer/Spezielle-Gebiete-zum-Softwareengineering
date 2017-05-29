@@ -1,9 +1,7 @@
 package rest;
 
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
 import javax.enterprise.context.RequestScoped;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -12,6 +10,12 @@ import Interface.HomeBeanRemote;
 
 
 
+/**
+ * @author Jonas
+ *	Rest Test Class
+ *  /test will return successful
+ *  /test/things will list all things
+ */
 @RequestScoped
 @Path("test")
 public class Test {
@@ -32,11 +36,7 @@ public class Test {
 	@GET
 	@Path("things")
 	public String testThings() {
-		System.out.println("TESTING!!");
-		
-		bh.createUser("aswd", "asd");
-		
-		
+		//TODO: Implement listing all things		
 		return "{\"test:)\":" + bh.test() + "}";
 	}
 
