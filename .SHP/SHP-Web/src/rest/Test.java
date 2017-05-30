@@ -1,12 +1,17 @@
 package rest;
 
+import java.util.List;
+
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.json.JSONObject;
+
 import Interface.HomeBeanRemote;
+import Model.Thing;
 
 
 
@@ -27,7 +32,11 @@ public class Test {
 	@GET
 	public String test() {
 		System.out.println("TESTING!!");
-		return "{\"test\":" + "\"successful\"" + "}";
+		JSONObject json = new JSONObject();
+		json.put("test", "successful");
+
+		
+		return json.toString();//"{\"test\":" + "\"successful\"" + "}";
 	}
 
 	
@@ -36,8 +45,19 @@ public class Test {
 	@GET
 	@Path("things")
 	public String testThings() {
-		//TODO: Implement listing all things		
-		return "{\"test:)\":" + bh.test() + "}";
+		List<Thing> things = bh.getAllThings();		
+		JSONObject json = new JSONObject();
+		for(Thing t: things){
+			JSONObject inner = new JSONObject();
+			inner.put("type", t.getType());
+			inner.put("name", t.getName());
+			inner.put("mqtttopic", t.getMqttTopic());
+			json.put(t.getId().toString(),inner );
+		}
+		
+		
+		//json.put("test", bh.test() );	
+		return json.toString();
 	}
 
 

@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.ejb.Remote;
 
+import Model.SystemConfig;
 import Model.Thing;
 
 @Remote
@@ -31,5 +32,12 @@ public interface HomeBeanRemote {
 	 * @return
 	 */
 	public List<Thing> getAllThings();
+	
+	
+	/**
+	 * get the System Config Object
+	 * @return
+	 */
+	public SystemConfig getSystemConfig();
 	
 }

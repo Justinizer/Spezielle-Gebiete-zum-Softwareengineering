@@ -5,6 +5,7 @@
 	  <class>Model.SensorData</class>
 	  <class>Model.Thing</class>
 	  <class>Model.User</class>
+	  <class>Model.SystemConfig</class>
 	    <properties>
   			<property name="hibernate.hbm2ddl.auto" value="update"/>
   		</properties>

@@ -8,6 +8,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import Interface.HomeBeanRemote;
+import Model.SystemConfig;
 import Model.Thing;
 import Model.User;
 
@@ -31,9 +32,12 @@ public class HomeBean implements HomeBeanRemote {
 		// TODO Auto-generated constructor stub
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#test()
+	 */
 	@Override
 	public String test() {
-		return "\"yay\"";
+		return "Bean working";
 	}
 
 	/*
@@ -91,17 +95,27 @@ public class HomeBean implements HomeBeanRemote {
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getAllThings()
+	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Thing> getAllThings() {
-		if (isLoggedin) {
+		//if (isLoggedin) {
 			try {
 				return em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
 			} catch (Exception e) {
 
 			}
-		}
+		//}
 		return null;
+	}
+
+	@Override
+	public SystemConfig getSystemConfig() {
+		// TODO Auto-generated method stub
+		return em.createNamedQuery(SystemConfig.GET_CONFIG,SystemConfig.class).getSingleResult();
+		
 	}
 
 }

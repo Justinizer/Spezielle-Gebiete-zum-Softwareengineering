@@ -77,4 +77,7 @@ public class Thing implements Serializable {
 		this.data.add(data);
 	}
    
+	public ThingType getType(){
+		return type;
+	}
 }
