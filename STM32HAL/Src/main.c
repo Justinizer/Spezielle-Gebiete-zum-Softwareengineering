@@ -75,7 +75,7 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-uint8_t buffer[] = "Hello, World!\n";
+uint8_t buffer[10];
 
 /* USER CODE END 0 */
 
@@ -110,6 +110,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
+HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,8 +120,18 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-  	HAL_Delay(1000);
-  	CDC_Transmit_FS(buffer, sizeof(buffer) - 1);
+
+    // Wait for header
+    do {
+      HAL_UART_Receive(&huart2, buffer, 1, 1000);
+    } while (buffer[0] != 0xAA);
+
+    // Receive rest of data
+    HAL_UART_Receive(&huart2, buffer + 1, 9, 1000);
+
+
+    CDC_Transmit_FS(buffer, 10);
+    CDC_Transmit_FS("\n", 1);
 
   }
   /* USER CODE END 3 */
@@ -207,7 +218,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
