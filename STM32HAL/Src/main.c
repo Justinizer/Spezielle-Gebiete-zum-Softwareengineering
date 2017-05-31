@@ -49,6 +49,9 @@
 #include "main.h"
 #include "stm32f1xx_hal.h"
 #include "usb_device.h"
+#include "usbd_cdc_if.h"
+#include "sds011.h"
+#include "util.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -71,11 +74,10 @@ static void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+static void transmit_data_to_pc(int pm2_5, int pm10);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-uint8_t buffer[10];
 
 /* USER CODE END 0 */
 
@@ -83,7 +85,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  int pm2_5 = 0;
+  int pm10 = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -110,7 +113,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
-HAL_Delay(1000);
+  HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,19 +123,8 @@ HAL_Delay(1000);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
-    // Wait for header
-    do {
-      HAL_UART_Receive(&huart2, buffer, 1, 1000);
-    } while (buffer[0] != 0xAA);
-
-    // Receive rest of data
-    HAL_UART_Receive(&huart2, buffer + 1, 9, 1000);
-
-
-    CDC_Transmit_FS(buffer, 10);
-    CDC_Transmit_FS("\n", 1);
-
+    get_sensor_data(&huart2, &pm2_5, &pm10);
+    transmit_data_to_pc(pm2_5, pm10);
   }
   /* USER CODE END 3 */
 
@@ -249,6 +241,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+static void transmit_data_to_pc(int pm2_5, int pm10) {
+  char buffer[20];
+
+  snprintf(buffer, 20, "%d;%d\n", pm2_5, pm10);
+  CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer));
+}
 
 /* USER CODE END 4 */
 
