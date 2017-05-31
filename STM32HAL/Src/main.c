@@ -49,9 +49,8 @@
 #include "main.h"
 #include "stm32f1xx_hal.h"
 #include "usb_device.h"
-#include "usbd_cdc_if.h"
 #include "sds011.h"
-#include "util.h"
+#include "communication.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -74,7 +73,7 @@ static void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-static void transmit_data_to_pc(int pm2_5, int pm10);
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -242,12 +241,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-static void transmit_data_to_pc(int pm2_5, int pm10) {
-  char buffer[20];
-
-  snprintf(buffer, 20, "%d;%d\n", pm2_5, pm10);
-  CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer));
-}
 
 /* USER CODE END 4 */
 

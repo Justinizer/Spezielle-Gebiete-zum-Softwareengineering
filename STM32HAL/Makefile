@@ -74,6 +74,7 @@ Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c \
 Src/stm32f1xx_hal_msp.c \
 Src/usbd_desc.c \
 Src/sds011.c \
+Src/communication.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc_ex.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c

@@ -13,7 +13,6 @@ void get_sensor_data(UART_HandleTypeDef *huart, int *pm2_5, int *pm10) {
     HAL_UART_Receive(huart, receive_buffer + 1, SDS011_DATA_PACKET_SIZE - 1, SDS011_READ_TIMEOUT);
 
     if (receive_buffer[1] != SDS011_DATA_CMD) {
-    	CDC_Transmit_FS("Command stimmt nicht!\n", 22);
     	return;
     }
 
@@ -24,7 +23,6 @@ void get_sensor_data(UART_HandleTypeDef *huart, int *pm2_5, int *pm10) {
     }
 
     if (receive_buffer[8] != (checksum & 0xFF)) {
-    	CDC_Transmit_FS("Checksum stimmt nicht!\n", 23);
     	return;
     }
 
