@@ -15,6 +15,7 @@ import javax.ws.rs.Produces;
 import org.json.JSONObject;
 
 import Interface.HomeBeanRemote;
+import Model.SensorData;
 import Model.Thing;
 
 
@@ -77,6 +78,10 @@ public class Gui implements Serializable{
 		return "{\"status\":" + "\"False\"" + "}";		
 	}
 	
+	/**
+	 * lists all things and the current value of each thing
+	 * @return
+	 */
 	@Produces("application/json")
 	@GET
 	@Path("things")
@@ -89,11 +94,47 @@ public class Gui implements Serializable{
 			inner.put("type", t.getType());
 			inner.put("name", t.getName());
 			inner.put("mqtttopic", t.getMqttTopic());
+			List<SensorData> datas = t.getData();
+			
+			if(datas.size() > 0){
+				JSONObject lastValue = new JSONObject();
+				SensorData data =  datas.get(datas.size()-1);
+				lastValue.put("time", data.getTime());
+				lastValue.put("value", data.getValue());
+				inner.append("currentValue", lastValue);
+			} else {
+				inner.put("currentValue", "null");
+			}			
+			
 			json.put(t.getId().toString(),inner );
 		}
 		
 		return json.toString();		
 	}
+	
+	
+	
+	@Produces("application/json")
+	@GET
+	@Path("things/{id}")
+	public String getSensorData(@PathParam("id") String id) {
+	
+		JSONObject json = new JSONObject();
+		try{
+			
+			for(SensorData s: bh.getAllDataForThing(Integer.parseInt(id))){
+				JSONObject inner = new JSONObject();
+				inner.put("time", s.getTime());
+				inner.put("value", s.getValue());
+				json.put(s.getId().toString(), inner);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return json.toString();
+	}
+	
 	
 	
 	

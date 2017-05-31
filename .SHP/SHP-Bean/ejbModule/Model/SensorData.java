@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.lang.Integer;
 import javax.persistence.*;
 
+
 /**
  * Entity implementation class for Entity: SensorData
  *
@@ -59,6 +60,9 @@ public class SensorData implements Serializable {
 	
 	@Override
 	public String toString(){
+
 		return "SensorData time: " + time + " value: " + value;
 	}
+	
+	
 }

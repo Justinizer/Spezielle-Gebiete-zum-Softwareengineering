@@ -55,5 +55,12 @@ public interface HomeBeanRemote {
 	 */
 	public void addData(SensorData s);
 	
+	/**
+	 * get all sensor data for a specific thing
+	 * @param id the id of the thing
+	 * @return the list of data
+	 */
+	public List<SensorData> getAllDataForThing(int id);
+	
 	
 }

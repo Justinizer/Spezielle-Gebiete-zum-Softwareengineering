@@ -1,5 +1,6 @@
 package Bean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ejb.Remote;
@@ -147,6 +148,20 @@ public class HomeBean implements HomeBeanRemote {
 	public void addData(SensorData s) {
 		em.persist(s);
 		em.flush();
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getAllDataForThing(int)
+	 */
+	@Override
+	public List<SensorData> getAllDataForThing(int id) {
+		Thing t = em.find(Thing.class, id);
+		//todo: check if user is allowed to see thing
+		
+		if(t == null){
+			return new ArrayList<SensorData>();
+		}
+		return t.getData();
 	}
 
 

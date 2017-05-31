@@ -1,6 +1,7 @@
 package Model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -70,6 +71,9 @@ public class Thing implements Serializable {
 		this.mqttTopic = mqttTopic;
 	}   
 	public List<SensorData> getData() {
+		if(this.data == null){
+			return new ArrayList<SensorData>();
+		}
 		return this.data;
 	}
 
