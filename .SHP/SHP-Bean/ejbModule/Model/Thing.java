@@ -36,7 +36,7 @@ public class Thing implements Serializable {
 	private String name;
 	private String mqttTopic;
 	
-	@OneToMany(mappedBy = "thing", fetch=FetchType.LAZY)
+	@OneToMany(mappedBy = "thing", fetch=FetchType.EAGER)
 	private List<SensorData> data;
 	
 

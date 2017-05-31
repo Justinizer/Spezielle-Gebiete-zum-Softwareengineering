@@ -1,17 +1,16 @@
 package Bean;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.inject.Inject;
-import javax.interceptor.AroundInvoke;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -19,12 +18,14 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import Interface.HomeBeanRemote;
+import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
 
 /**
- * Session Bean implementation class MqttBean
+ * Startup Bean for Mqtt Client. Connects to the Broker and adds Data to the DB
  */
+
 @Startup
 @Singleton
 public class MqttBean implements MqttCallback {
@@ -32,35 +33,33 @@ public class MqttBean implements MqttCallback {
 
 	@PersistenceContext
 	EntityManager em;
-	
+
 	@EJB
 	HomeBeanRemote hb;
 
-	public MqttBean() {
-		System.out.println("!!!Hello From MQTT Bean!!!");
+	private Map<String, Thing> things = new HashMap<String, Thing>();
 
-		// SystemConfig sc =
-		// em.createNamedQuery(SystemConfig.GET_CONFIG,SystemConfig.class).getSingleResult();
-		// System.out.println(sc.getMqttServer());
-		//
+	public MqttBean() {		
+
 	}
 
 	@PostConstruct
-	  public void init() {
-		SystemConfig sc =
-				 em.createNamedQuery(SystemConfig.GET_CONFIG,SystemConfig.class).getSingleResult();
-				 System.out.println(sc.getMqttServer());
-				 
-				 
-				 try {
-			client = new MqttClient("tcp://" + sc.getMqttServer(),
-					"SHP" + new Random().nextInt(500000));
+	public void init() {
+		System.out.println("----> MQTT BEAN STARTED <----");
+		SystemConfig sc = hb.getSystemConfig();
+		System.out.println(sc.getMqttServer());
+
+		try {
+			@SuppressWarnings("unchecked")
+			List<Thing> thingsList = (List<Thing>) em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
+
+			client = new MqttClient("tcp://" + sc.getMqttServer(), "SHP" + new Random().nextInt(500000));
 			client.connect();
 			client.setCallback(this);
 
-			for (Thing t : hb.getAllThings()) {
+			for (Thing t : thingsList) {
+				things.put(t.getMqttTopic(), t);
 				client.subscribe(t.getMqttTopic());
-				System.out.println(t.getMqttTopic());
 			}
 
 			System.out.println("!!!!CONNECTED!!!!");
@@ -69,25 +68,61 @@ public class MqttBean implements MqttCallback {
 			System.out.println("!!!!MQTT EXCEPTION!!!!");
 			e.printStackTrace();
 		}
-	  }
+
+	}
+
+	
+
+	@Override
+	public void messageArrived(String arg0, MqttMessage arg1) {
+		System.out.println(arg0 + " " + new String(arg1.getPayload()));
+		Thing t = things.get(arg0);
+		SensorData data = new SensorData(new String(arg1.getPayload()), t);
+		
+		hb.addData(data);
+		/* warum ich den umweg über die hb gehe und nicht einfach em.persis(data) mache? weils nicht geht... 
+		 * namedquerrys gehen, persist nicht :( */
+
+	}
+
+	
+	/**
+	 * Sleep 2 seconds
+	 */
+	private void sleep2k() {
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
+	}
+
+	
+	/**
+	 * Publish a Message to a thing. The mqtt Topic of the Thing will be used
+	 * @param t the thing
+	 * @param message
+	 */
+	public void publish(Thing t, String message) {
+		try {
+			client.publish(t.getMqttTopic(), new MqttMessage(message.getBytes()));
+		} catch (MqttException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void connectionLost(Throwable arg0) {
-		// TODO Auto-generated method stub
-
+		while (!client.isConnected()) {
+			try {
+				client.connect();
+			} catch (MqttException e) {
+				sleep2k();
+			}
+		}
 	}
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void messageArrived(String arg0, MqttMessage arg1) throws Exception {
-		// TODO Auto-generated method stub
-		System.out.println(arg0 + " " + new String(arg1.getPayload()));
-
 	}
 
 }

@@ -6,6 +6,9 @@
 	  <class>Model.Thing</class>
 	  <class>Model.User</class>
 	  <class>Model.SystemConfig</class>
+	  <class>Model.Automation</class>
+	  <class>Model.Action</class>
+	  <class>Model.Condition</class>
 	    <properties>
   			<property name="hibernate.hbm2ddl.auto" value="update"/>
   		</properties>

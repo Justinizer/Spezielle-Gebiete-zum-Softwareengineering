@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.ejb.Remote;
 
+import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
 
@@ -27,6 +28,8 @@ public interface HomeBeanRemote {
 	 */
 	public boolean checkLogin(String email, String pw);
 	
+	
+	
 	/**
 	 * get all things for the current user
 	 * @return
@@ -39,5 +42,18 @@ public interface HomeBeanRemote {
 	 * @return
 	 */
 	public SystemConfig getSystemConfig();
+	
+	/**
+	 * get the username of the currently loggedin user
+	 * @return
+	 */
+	public String getUsername();
+	
+	/**
+	 * add new sensor data to the database
+	 * @param s
+	 */
+	public void addData(SensorData s);
+	
 	
 }

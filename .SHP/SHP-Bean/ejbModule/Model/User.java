@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.*;
 
+
 /**
  * Entity implementation class for Entity: User
  *
@@ -24,6 +25,8 @@ public class User implements Serializable {
 
 	private String password;
 	private String email;
+	
+
 
 	@ManyToMany
 	@JoinTable(name = "User_Thing", joinColumns = @JoinColumn(name = "User_id", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "Thing_id", referencedColumnName = "ID"))
@@ -51,5 +54,4 @@ public class User implements Serializable {
 	public String getPassword(){
 		return password;
 	}
-
 }

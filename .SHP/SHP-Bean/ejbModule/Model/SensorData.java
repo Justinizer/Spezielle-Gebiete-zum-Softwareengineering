@@ -16,7 +16,7 @@ public class SensorData implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	private int time;
-	private float value;
+	private String value;
 	
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="Thing_ID")
@@ -28,6 +28,13 @@ public class SensorData implements Serializable {
 	public SensorData() {
 		super();
 	}   
+	
+	public SensorData(String value, Thing t){
+		time = (int) (System.currentTimeMillis() / 1000L);
+		this.value = value;
+		this.thing = t;
+	}
+	
 	public Integer getId() {
 		return this.id;
 	}
@@ -35,19 +42,23 @@ public class SensorData implements Serializable {
 	public void setId(Integer id) {
 		this.id = id;
 	}   
-	public int getTime() {
+	public long getTime() {
 		return this.time;
 	}
 
 	public void setTime(int time) {
 		this.time = time;
 	}   
-	public float getValue() {
+	public String getValue() {
 		return this.value;
 	}
 
-	public void setValue(float value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
-   
+	
+	@Override
+	public String toString(){
+		return "SensorData time: " + time + " value: " + value;
+	}
 }

@@ -8,6 +8,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import Interface.HomeBeanRemote;
+import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
 import Model.User;
@@ -29,7 +30,7 @@ public class HomeBean implements HomeBeanRemote {
 	 * Default constructor.
 	 */
 	public HomeBean() {
-		// TODO Auto-generated constructor stub
+		
 	}
 
 	/* (non-Javadoc)
@@ -76,9 +77,13 @@ public class HomeBean implements HomeBeanRemote {
 	@Override
 	public boolean checkLogin(String email, String pw) {
 		if (pw == null) {
+			user= null;
+			isLoggedin = false;
 			return false;
 		}
 		if (email == null) {
+			user= null;
+			isLoggedin = false;
 			return false;
 		}
 
@@ -94,6 +99,10 @@ public class HomeBean implements HomeBeanRemote {
 		}
 		return false;
 	}
+	
+
+	
+	
 
 	/* (non-Javadoc)
 	 * @see Interface.HomeBeanRemote#getAllThings()
@@ -101,21 +110,47 @@ public class HomeBean implements HomeBeanRemote {
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Thing> getAllThings() {
-		//if (isLoggedin) {
+		if (isLoggedin) {
 			try {
 				return em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
 			} catch (Exception e) {
 
 			}
-		//}
+		}
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getSystemConfig()
+	 */
 	@Override
 	public SystemConfig getSystemConfig() {
-		// TODO Auto-generated method stub
 		return em.createNamedQuery(SystemConfig.GET_CONFIG,SystemConfig.class).getSingleResult();
 		
 	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getUsername()
+	 */
+	@Override
+	public String getUsername() {
+		if(user == null){
+			return "";
+		}
+		return user.getEmail();
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#addData(Model.SensorData)
+	 */
+	@Override
+	public void addData(SensorData s) {
+		em.persist(s);
+		em.flush();
+	}
+
+
+
+
 
 }
