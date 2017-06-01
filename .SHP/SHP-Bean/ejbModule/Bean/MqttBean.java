@@ -29,7 +29,7 @@ import Model.Thing;
 @Startup
 @Singleton
 public class MqttBean implements MqttCallback {
-	public MqttClient client;
+	public static MqttClient client;
 
 	@PersistenceContext
 	EntityManager em;
@@ -80,6 +80,7 @@ public class MqttBean implements MqttCallback {
 		SensorData data = new SensorData(new String(arg1.getPayload()), t);
 		
 		hb.addData(data);
+		hb.publish("/test", "message");
 		/* warum ich den umweg über die hb gehe und nicht einfach em.persis(data) mache? weils nicht geht... 
 		 * namedquerrys gehen, persist nicht :( */
 
@@ -96,19 +97,6 @@ public class MqttBean implements MqttCallback {
 		}
 	}
 
-	
-	/**
-	 * Publish a Message to a thing. The mqtt Topic of the Thing will be used
-	 * @param t the thing
-	 * @param message
-	 */
-	public void publish(Thing t, String message) {
-		try {
-			client.publish(t.getMqttTopic(), new MqttMessage(message.getBytes()));
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
-	}
 
 	@Override
 	public void connectionLost(Throwable arg0) {

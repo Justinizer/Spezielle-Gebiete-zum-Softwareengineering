@@ -4,6 +4,9 @@ import java.util.List;
 
 import javax.ejb.Remote;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
@@ -61,6 +64,15 @@ public interface HomeBeanRemote {
 	 * @return the list of data
 	 */
 	public List<SensorData> getAllDataForThing(int id);
+	
+	/**
+	 * Publish a Message to a thing. The mqtt Topic of the Thing will be used
+	 * @param t the thing
+	 * @param message
+	 */
+	public void publish(Thing t, String message);
+	
+	public void publish(String t, String message);
 	
 	
 }

@@ -2,11 +2,17 @@ package Bean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
+import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import Interface.HomeBeanRemote;
 import Model.SensorData;
@@ -31,10 +37,12 @@ public class HomeBean implements HomeBeanRemote {
 	 * Default constructor.
 	 */
 	public HomeBean() {
-		
+
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#test()
 	 */
 	@Override
@@ -78,12 +86,12 @@ public class HomeBean implements HomeBeanRemote {
 	@Override
 	public boolean checkLogin(String email, String pw) {
 		if (pw == null) {
-			user= null;
+			user = null;
 			isLoggedin = false;
 			return false;
 		}
 		if (email == null) {
-			user= null;
+			user = null;
 			isLoggedin = false;
 			return false;
 		}
@@ -100,12 +108,10 @@ public class HomeBean implements HomeBeanRemote {
 		}
 		return false;
 	}
-	
 
-	
-	
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#getAllThings()
 	 */
 	@Override
@@ -121,51 +127,101 @@ public class HomeBean implements HomeBeanRemote {
 		return null;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#getSystemConfig()
 	 */
 	@Override
 	public SystemConfig getSystemConfig() {
-		return em.createNamedQuery(SystemConfig.GET_CONFIG,SystemConfig.class).getSingleResult();
-		
+		return em.createNamedQuery(SystemConfig.GET_CONFIG, SystemConfig.class).getSingleResult();
+
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#getUsername()
 	 */
 	@Override
 	public String getUsername() {
-		if(user == null){
+		if (user == null) {
 			return "";
 		}
 		return user.getEmail();
 	}
 
-	/* (non-Javadoc)
+	MqttClient client;
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#addData(Model.SensorData)
 	 */
 	@Override
 	public void addData(SensorData s) {
 		em.persist(s);
 		em.flush();
+		
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#getAllDataForThing(int)
 	 */
 	@Override
 	public List<SensorData> getAllDataForThing(int id) {
 		Thing t = em.find(Thing.class, id);
-		//todo: check if user is allowed to see thing
-		
-		if(t == null){
+		// todo: check if user is allowed to see thing
+
+		if (t == null) {
 			return new ArrayList<SensorData>();
 		}
 		return t.getData();
 	}
 
+	@Override
+	public void publish(Thing t, String message) 
+	{
+		try {
+			if (client == null) {
+				client = new MqttClient("tcp://" + getSystemConfig().getMqttServer(),
+						"SHP" + new Random().nextInt(500000));
+			}
+			if (!client.isConnected()) {
 
+				client.connect();
+			}
+			client.publish(t.getMqttTopic(), new MqttMessage(message.getBytes()));
+			System.out.println("done");
+		} catch (MqttException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	@Override
+	public void publish(String t, String message) 
+	{
+		try {
+			if (client == null) {
+				client = new MqttClient("tcp://" + getSystemConfig().getMqttServer(),
+						"SHP" + new Random().nextInt(500000));
+			}
+			if (!client.isConnected()) {
 
-
-
+				client.connect();
+			}
+			client.publish(t, new MqttMessage(message.getBytes()));
+			System.out.println("done");
+		} catch (MqttException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 }
+
