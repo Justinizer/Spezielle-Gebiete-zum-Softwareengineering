@@ -15,6 +15,9 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import Interface.HomeBeanRemote;
+import Model.Action;
+import Model.Automation;
+import Model.Condition;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
@@ -173,6 +176,10 @@ public class HomeBean implements HomeBeanRemote {
 	 */
 	@Override
 	public List<SensorData> getAllDataForThing(int id) {
+		if(!isLoggedin){
+			return new ArrayList<SensorData>();
+		}
+		
 		Thing t = em.find(Thing.class, id);
 		// todo: check if user is allowed to see thing
 
@@ -182,12 +189,18 @@ public class HomeBean implements HomeBeanRemote {
 		return t.getData();
 	}
 	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#publish(int, java.lang.String)
+	 */
 	@Override
 	public boolean publish(int id, String message) {	
 			Thing t = em.find(Thing.class, id);
 			return publish(t,message);
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#publish(Model.Thing, java.lang.String)
+	 */
 	@Override
 	public boolean publish(Thing t, String message) {
 		if(t == null){
@@ -201,6 +214,9 @@ public class HomeBean implements HomeBeanRemote {
 
 	
 
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#publish(java.lang.String, java.lang.String)
+	 */
 	@Override
 	public boolean publish(String t, String message) {
 		if (!checkMqttClient()){
@@ -217,6 +233,10 @@ public class HomeBean implements HomeBeanRemote {
 
 	}
 
+	/** 
+	 * check if the mqtt client is ready, if not, connect it
+	 * @return false = client cant be connected
+	 */
 	private boolean checkMqttClient() {
 
 		try {
@@ -232,5 +252,80 @@ public class HomeBean implements HomeBeanRemote {
 			e.printStackTrace();
 		}
 		return client.isConnected();
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getAllAutomations()
+	 */
+	@Override
+	public List<Automation> getAllAutomations() {
+		if(!isLoggedin){
+			return new ArrayList<Automation>(); 
+		}
+		List<Automation> autos = (List<Automation>) em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();		
+		return autos;
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getAutomationById(int)
+	 */
+	@Override
+	public Automation getAutomationById(int id) {	
+		if(!isLoggedin){
+			return new Automation();
+		}
+		return em.find(Automation.class, id);
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#addAutomation(java.lang.String)
+	 */
+	@Override
+	public void addAutomation(String automationName) {
+		if(!isLoggedin){
+			return;
+		}
+		Automation auto = new Automation(automationName);
+		em.persist(auto);
+		em.flush();
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#addCondition(Model.Condition)
+	 */
+	@Override
+	public void addCondition(Condition c) {
+		if(!isLoggedin){
+			return;
+		}
+		em.persist(c);
+		em.flush();
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getThingById(int)
+	 */
+	@Override
+	public Thing getThingById(int id) {
+		if(!isLoggedin){
+			return null;
+		}
+		return em.find(Thing.class, id);
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#addAction(Model.Action)
+	 */
+	@Override
+	public void addAction(Action a) {
+		if(!isLoggedin){
+			return;
+		}
+		em.persist(a);
+		em.flush();
+		
 	}
 }

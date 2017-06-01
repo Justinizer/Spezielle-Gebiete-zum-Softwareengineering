@@ -34,6 +34,14 @@ public class Condition implements Serializable {
 	public Condition() {
 		super();
 	}
+	
+	public Condition(Automation auto, ConditionType type,  Thing t, String value) {
+		super();
+		this.type = type;
+		this.thing = t;
+		this.value = value;
+		this.auto = auto;
+	}
 
 	public int getId() {
 		return this.id;
@@ -53,6 +61,14 @@ public class Condition implements Serializable {
 
 	public void setValue(String value) {
 		this.value = value;
+	}
+	
+	public ConditionType getType(){
+		return type;
+	}
+	
+	public Thing getThing(){
+		return thing;
 	}
 
 }

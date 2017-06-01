@@ -4,13 +4,17 @@ import java.util.List;
 
 import javax.ejb.Remote;
 
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-
+import Model.Action;
+import Model.Automation;
+import Model.Condition;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
 
+/**
+ * @author Jonas
+ *
+ */
 @Remote
 public interface HomeBeanRemote {
 	public String test();
@@ -38,6 +42,13 @@ public interface HomeBeanRemote {
 	 * @return
 	 */
 	public List<Thing> getAllThings();
+	
+	/**
+	 * get a thing by id
+	 * @param id
+	 * @return null if id is invalid
+	 */
+	public Thing getThingById(int id);
 	
 	
 	/**
@@ -69,10 +80,52 @@ public interface HomeBeanRemote {
 	 * Publish a Message to a thing. The mqtt Topic of the Thing will be used
 	 * @param t the thing
 	 * @param message
+	 * @return true = success
 	 */
 	public boolean publish(Thing t, String message);
+	
+	/**
+	 * Publish a Message to a thing.
+	 * @param id of the thing. mqtt topic of thing will be used 
+	 * @param message 
+	 * @return true = success
+	 */
 	public boolean publish(int id, String message);
+	
+	/**
+	 * Publish a Message to a topic
+	 * @param t the topic
+	 * @param message the message
+	 * @return true = success
+	 */
 	public boolean publish(String t, String message);
+	
+	/**
+	 * List all automations
+	 * @return
+	 */
+	public List<Automation> getAllAutomations();
+
+	/**
+	 * get a specific automation by ID
+	 * @param id
+	 * @return
+	 */
+	public Automation getAutomationById(int id);
+	
+	/** 
+	 * add a new Automation to the DB
+	 * @param automationName
+	 */
+	public void addAutomation(String automationName);
+	
+	public void addCondition(Condition c);
+	
+	public void addAction(Action a);
+	
+	
+	
+	
 	
 	
 }

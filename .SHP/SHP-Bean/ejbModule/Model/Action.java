@@ -31,7 +31,14 @@ public class Action implements Serializable {
 
 	public Action() {
 		super();
-	}   
+	}  
+	public Action(String name, String value, Thing thing, Automation auto) {
+		super();
+		this.name = name;
+		this.thing = thing;
+		this.value = value;
+		this.auto = auto;
+	} 
 	public String getName() {
 		return this.name;
 	}
@@ -47,6 +54,9 @@ public class Action implements Serializable {
 	}
 	public void setValue(String value) {
 		this.value = value;
+	}
+	public Thing getThing(){
+		return thing;
 	}
    
 }

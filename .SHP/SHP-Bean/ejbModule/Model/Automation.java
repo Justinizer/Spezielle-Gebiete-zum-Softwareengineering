@@ -11,9 +11,12 @@ import javax.persistence.*;
  *
  */
 @Entity
-
+@NamedQueries({ 
+	@NamedQuery(name = Automation.GET_ALL_AUTOMATIONS, query = "SELECT Z FROM Automation z")})
 public class Automation implements Serializable {
-
+	public static final String GET_ALL_AUTOMATIONS = "Auto.getAll";
+	
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
@@ -32,6 +35,11 @@ public class Automation implements Serializable {
 
 	public Automation() {
 		super();
+	}  
+	
+	public Automation(String name) {
+		super();
+		this.name = name;
 	}   
 	public String getName() {
 		return this.name;
@@ -44,6 +52,24 @@ public class Automation implements Serializable {
 		return this.id;
 	}
 
+	
+	public List<Condition> getConditions(){
+		return conditions;
+	}
+	
+	
+	public List<Action> getActions(){
+		return actions;
+	}
+	
+	
+	public void addCondition(Condition c){
+		conditions.add(c);
+	}
+	
+	public void addAction(Action a){
+		actions.add(a);
+	}
 
    
 }
