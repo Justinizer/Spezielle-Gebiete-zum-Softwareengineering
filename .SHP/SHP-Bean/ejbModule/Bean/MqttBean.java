@@ -100,11 +100,15 @@ public class MqttBean implements MqttCallback {
 
 	@Override
 	public void connectionLost(Throwable arg0) {
+		System.out.println("DC!");
+		sleep2k();
 		while (!client.isConnected()) {
-			try {
+			System.out.println("connect...");
+			try {				
 				client.connect();
 			} catch (MqttException e) {
-				sleep2k();
+				System.out.println("connect Failed!");
+				sleep2k();				
 			}
 		}
 	}

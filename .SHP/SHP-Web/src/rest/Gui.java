@@ -24,6 +24,7 @@ public class Gui implements Serializable {
 	@EJB
 	HomeBeanRemote bh;
 
+	private GuiHelper helper = new GuiHelper();
 	/**
 	 * REST Test Method
 	 * 
@@ -33,7 +34,7 @@ public class Gui implements Serializable {
 	@GET
 	public String test() {
 		System.out.println("TESTING!!");
-		return "{\"test\":" + "\"successful\"" + "}";
+		return helper.getSuccess().toString();
 	}
 
 	/**
@@ -47,13 +48,13 @@ public class Gui implements Serializable {
 	@GET
 	@Path("login/{email}/{password}")
 	public String login(@PathParam("email") String email, @PathParam("password") String password) {
-		JSONObject json = new JSONObject();
+		JSONObject json;
 		if (bh.checkLogin(email, password)) {
-			json.put("status", "successful");
-			return json.toString();
+			json = helper.getSuccess();
+		} else {
+			json = helper.getFail();
 		}
 
-		json.put("status", "failed");
 		return json.toString();
 	}
 
@@ -70,20 +71,22 @@ public class Gui implements Serializable {
 	@GET
 	@Path("create/{email}/{password}")
 	public String create(@PathParam("email") String email, @PathParam("password") String password) {
+		JSONObject json ;
 		if (bh.createUser(email, password)) {
-			return "{\"status\":" + "\"True\"" + "}";
+			json = helper.getSuccess();
+		}else {
+			json = helper.getFail();
 		}
-		return "{\"status\":" + "\"False\"" + "}";
+		return json.toString();
 	}
 
 	/**
 	 * lists all things and the current value of each thing
-	 * 
 	 * @return
 	 */
 	@Produces("application/json")
 	@GET
-	@Path("things")
+	@Path("thing")
 	public String getThings() {
 		List<Thing> things = bh.getAllThings();
 		JSONObject json = new JSONObject();
@@ -93,28 +96,34 @@ public class Gui implements Serializable {
 			inner.put("type", t.getType());
 			inner.put("name", t.getName());
 			inner.put("mqtttopic", t.getMqttTopic());
-			inner.put("currentValue", getCurrentValue(t));
+			inner.put("currentValue", helper.getCurrentValue(t));
 			json.put(t.getId().toString(), inner);
 		}
 
 		return json.toString();
 	}
 
+
+
 	/**
-	 * get the current value of a thing.
-	 * @param t the thing
-	 * @return if no data is available, the object is empty
+	 * get all sensor data for a specific thing
+	 * 
+	 * @param id
+	 *            the id of the thing
+	 * @return all the data
 	 */
-	private JSONObject getCurrentValue(Thing t) {
-		List<SensorData> datas = t.getData();
-		JSONObject lastValue = new JSONObject();		
-		if (datas.size() == 0) {
-			return lastValue;
-		}		
-		SensorData data = datas.get(datas.size() - 1);
-		lastValue.put("time", data.getTime());
-		lastValue.put("value", data.getValue());
-		return lastValue;
+	@Produces("application/json")
+	@GET
+	@Path("thing/{id}")
+	public String getSensorData(@PathParam("id") int id) {
+		JSONObject json = new JSONObject();
+		for (SensorData s : bh.getAllDataForThing(id)) {
+			JSONObject inner = new JSONObject();
+			inner.put("time", s.getTime());
+			inner.put("value", s.getValue());
+			json.put(s.getId().toString(), inner);
+		}
+		return json.toString();
 	}
 
 	/**
@@ -126,21 +135,15 @@ public class Gui implements Serializable {
 	 */
 	@Produces("application/json")
 	@GET
-	@Path("things/{id}")
-	public String getSensorData(@PathParam("id") String id) {
-
-		JSONObject json = new JSONObject();
-		try {
-			for (SensorData s : bh.getAllDataForThing(Integer.parseInt(id))) {
-				JSONObject inner = new JSONObject();
-				inner.put("time", s.getTime());
-				inner.put("value", s.getValue());
-				json.put(s.getId().toString(), inner);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+	@Path("thing/{id}/{value}")
+	public String changeState(@PathParam("id") int id, @PathParam("value") String value) {
+		JSONObject json;
+		
+		if(bh.publish(id, value)){
+			json = helper.getSuccess();
+		} else {
+			json = helper.getFail();
 		}
-
 		return json.toString();
 	}
 

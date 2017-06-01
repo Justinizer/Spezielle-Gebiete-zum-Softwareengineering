@@ -18,6 +18,7 @@ import Interface.HomeBeanRemote;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
+import Model.ThingType;
 import Model.User;
 
 /**
@@ -162,7 +163,7 @@ public class HomeBean implements HomeBeanRemote {
 	public void addData(SensorData s) {
 		em.persist(s);
 		em.flush();
-		
+
 	}
 
 	/*
@@ -180,48 +181,56 @@ public class HomeBean implements HomeBeanRemote {
 		}
 		return t.getData();
 	}
-
+	
 	@Override
-	public void publish(Thing t, String message) 
-	{
-		try {
-			if (client == null) {
-				client = new MqttClient("tcp://" + getSystemConfig().getMqttServer(),
-						"SHP" + new Random().nextInt(500000));
-			}
-			if (!client.isConnected()) {
-
-				client.connect();
-			}
-			client.publish(t.getMqttTopic(), new MqttMessage(message.getBytes()));
-			System.out.println("done");
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+	public boolean publish(int id, String message) {	
+			Thing t = em.find(Thing.class, id);
+			return publish(t,message);
 	}
-	
-	
-	@Override
-	public void publish(String t, String message) 
-	{
-		try {
-			if (client == null) {
-				client = new MqttClient("tcp://" + getSystemConfig().getMqttServer(),
-						"SHP" + new Random().nextInt(500000));
-			}
-			if (!client.isConnected()) {
 
-				client.connect();
-			}
+	@Override
+	public boolean publish(Thing t, String message) {
+		if(t == null){
+			return false;
+		}
+		if(t.getType() == ThingType.Sensor){
+			return false;
+		}
+		return publish(t.getMqttTopic(), message);
+	}
+
+	
+
+	@Override
+	public boolean publish(String t, String message) {
+		if (!checkMqttClient()){
+			return false;
+		}
+		try {						
 			client.publish(t, new MqttMessage(message.getBytes()));
 			System.out.println("done");
+			return true;
+		} catch (MqttException e) {
+			e.printStackTrace();
+		}
+		return false;
+
+	}
+
+	private boolean checkMqttClient() {
+
+		try {
+			if (client == null) {
+				client = new MqttClient("tcp://" + getSystemConfig().getMqttServer(),
+						"SHP" + new Random().nextInt(500000));
+			}
+			if (!client.isConnected()) {
+				client.connect();
+			}
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		return client.isConnected();
 	}
 }
-

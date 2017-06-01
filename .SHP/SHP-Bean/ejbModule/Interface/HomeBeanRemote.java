@@ -70,9 +70,9 @@ public interface HomeBeanRemote {
 	 * @param t the thing
 	 * @param message
 	 */
-	public void publish(Thing t, String message);
-	
-	public void publish(String t, String message);
+	public boolean publish(Thing t, String message);
+	public boolean publish(int id, String message);
+	public boolean publish(String t, String message);
 	
 	
 }
