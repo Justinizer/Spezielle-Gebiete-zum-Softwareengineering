@@ -7,6 +7,7 @@ import java.util.Random;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.ejb.Remote;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.persistence.EntityManager;
@@ -18,6 +19,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import Interface.HomeBeanRemote;
+import Interface.MqttBeanRemote;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
@@ -28,7 +30,8 @@ import Model.Thing;
 
 @Startup
 @Singleton
-public class MqttBean implements MqttCallback {
+@Remote(MqttBeanRemote.class)
+public class MqttBean implements MqttCallback, MqttBeanRemote {
 	public static MqttClient client;
 
 	@PersistenceContext
@@ -70,6 +73,10 @@ public class MqttBean implements MqttCallback {
 		}
 
 	}
+	
+	public void testi(){
+		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
+	}
 
 	
 
@@ -80,11 +87,53 @@ public class MqttBean implements MqttCallback {
 		SensorData data = new SensorData(new String(arg1.getPayload()), t);
 		
 		hb.addData(data);
-		hb.publish("/test", "message");
 		/* warum ich den umweg über die hb gehe und nicht einfach em.persis(data) mache? weils nicht geht... 
 		 * namedquerrys gehen, persist nicht :( */
 
 	}
+	
+	
+	/** 
+	 * check if the mqtt client is ready, if not, connect it
+	 * @return false = client cant be connected
+	 */
+	private boolean checkMqttClient() {
+
+		try {
+			if (client == null) {
+				client = new MqttClient("tcp://" + hb.getSystemConfig().getMqttServer(),
+						"SHP" + new Random().nextInt(500000));
+			}
+			if (!client.isConnected()) {
+				client.connect();
+			}
+		} catch (MqttException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return client.isConnected();
+	}
+	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#publish(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public boolean publish(String t, String message) {
+		if (!checkMqttClient()){
+			return false;
+		}
+		try {						
+			client.publish(t, new MqttMessage(message.getBytes()));
+			System.out.println("done");
+			return true;
+		} catch (MqttException e) {
+			e.printStackTrace();
+		}
+		return false;
+
+	}
+
+
 
 	
 	/**

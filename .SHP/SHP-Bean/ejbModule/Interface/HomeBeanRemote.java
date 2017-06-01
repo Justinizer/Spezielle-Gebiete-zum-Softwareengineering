@@ -92,13 +92,7 @@ public interface HomeBeanRemote {
 	 */
 	public boolean publish(int id, String message);
 	
-	/**
-	 * Publish a Message to a topic
-	 * @param t the topic
-	 * @param message the message
-	 * @return true = success
-	 */
-	public boolean publish(String t, String message);
+
 	
 	/**
 	 * List all automations

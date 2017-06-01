@@ -15,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import Interface.HomeBeanRemote;
+import Interface.MqttBeanRemote;
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
@@ -33,6 +34,11 @@ public class HomeBean implements HomeBeanRemote {
 
 	@PersistenceContext
 	EntityManager em;
+	
+	
+	@EJB 
+	MqttBeanRemote mb;
+	 
 
 	private boolean isLoggedin = false;
 	private User user;
@@ -41,7 +47,7 @@ public class HomeBean implements HomeBeanRemote {
 	 * Default constructor.
 	 */
 	public HomeBean() {
-
+		
 	}
 
 	/*
@@ -155,7 +161,6 @@ public class HomeBean implements HomeBeanRemote {
 		return user.getEmail();
 	}
 
-	MqttClient client;
 
 	/*
 	 * (non-Javadoc)
@@ -195,6 +200,7 @@ public class HomeBean implements HomeBeanRemote {
 	@Override
 	public boolean publish(int id, String message) {	
 			Thing t = em.find(Thing.class, id);
+			
 			return publish(t,message);
 	}
 
@@ -207,53 +213,16 @@ public class HomeBean implements HomeBeanRemote {
 			return false;
 		}
 		if(t.getType() == ThingType.Sensor){
+			System.out.println("publish to sensor -.-");
 			return false;
 		}
-		return publish(t.getMqttTopic(), message);
+		return mb.publish(t.getMqttTopic(), message);
 	}
 
 	
 
-	/* (non-Javadoc)
-	 * @see Interface.HomeBeanRemote#publish(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public boolean publish(String t, String message) {
-		if (!checkMqttClient()){
-			return false;
-		}
-		try {						
-			client.publish(t, new MqttMessage(message.getBytes()));
-			System.out.println("done");
-			return true;
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
-		return false;
-
-	}
-
-	/** 
-	 * check if the mqtt client is ready, if not, connect it
-	 * @return false = client cant be connected
-	 */
-	private boolean checkMqttClient() {
-
-		try {
-			if (client == null) {
-				client = new MqttClient("tcp://" + getSystemConfig().getMqttServer(),
-						"SHP" + new Random().nextInt(500000));
-			}
-			if (!client.isConnected()) {
-				client.connect();
-			}
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return client.isConnected();
-	}
-
+	
+	
 	/* (non-Javadoc)
 	 * @see Interface.HomeBeanRemote#getAllAutomations()
 	 */
