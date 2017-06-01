@@ -1,7 +1,8 @@
 #include "communication.h"
 
-#include "usbd_cdc_if.h"
-
+// Buffer for storing command packets received from the pc over usb
+uint8_t command_buffer[COMMAND_BUFFER_SIZE];
+int received_command_bytes;
 
 void transmit_data_to_pc(int pm2_5, int pm10) {
   char buffer[TRANSMIT_BUFFER_SIZE];

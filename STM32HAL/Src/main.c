@@ -125,6 +125,13 @@ int main(void)
 		//sds011_set_mode(&huart2, WAKEUP);
 		//HAL_Delay(30000);
 
+		/*if (received_command_bytes) {
+			CDC_Transmit_FS(command_buffer, received_command_bytes);
+			received_command_bytes = 0;
+		}*/
+		//CDC_Transmit_FS("Hello, World!\n", 14);
+		//HAL_Delay(1000);
+
 		sds011_get_sensor_data(&huart2, &pm2_5, &pm10);
 		transmit_data_to_pc(pm2_5, pm10);
 		HAL_Delay(1000);
