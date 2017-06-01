@@ -76,12 +76,28 @@ public class Thing implements Serializable {
 		}
 		return this.data;
 	}
+	
+	public SensorData getLastSensorData(){
+		if(this.data == null){
+			return null;
+		}
+		if(this.data.size() == 0){
+			return null;
+		}
+		return this.data.get(this.data.size()-1);
+	}
 
 	public void addData(SensorData data) {
 		this.data.add(data);
+	}
+	
+	public void addData(String data){
+		this.data.add(new SensorData(data,this));
 	}
    
 	public ThingType getType(){
 		return type;
 	}
+	
+	
 }

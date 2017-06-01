@@ -27,12 +27,11 @@ public class GuiHelper {
 	 * @return if no data is available, the object is empty
 	 */
 	public JSONObject getCurrentValue(Thing t) {
-		List<SensorData> datas = t.getData();
+		SensorData data = t.getLastSensorData();
 		JSONObject lastValue = new JSONObject();
-		if (datas.size() == 0) {
+		if (data == null) {
 			return lastValue;
-		}
-		SensorData data = datas.get(datas.size() - 1);
+		}		
 		lastValue.put("time", data.getTime());
 		lastValue.put("value", data.getValue());
 		return lastValue;

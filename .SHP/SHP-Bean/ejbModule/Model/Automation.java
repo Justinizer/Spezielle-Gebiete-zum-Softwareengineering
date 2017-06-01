@@ -70,6 +70,28 @@ public class Automation implements Serializable {
 	public void addAction(Action a){
 		actions.add(a);
 	}
+	
+	public boolean fulfilled(String newValue, String topic){
+		
+		boolean allTrue = true;
+		System.out.println("in automation " + conditions.size());
+		for(Condition c:conditions){
+			System.out.println("checking condition " + c.getId());
+			if(!c.fulfills(newValue, topic)){
+				System.out.println("is NOT fulfilled");
+				allTrue = false;
+			} else {
+				System.out.println("is fulfilled");
+			}
+		}
+		
+		if(allTrue){
+			System.out.println("AUTOMATION FULFILLED! WILL FIRE!");
+		} else {
+			System.out.println("Automation NOT fulfilled");
+		}
+		return allTrue;
+	}
 
    
 }
