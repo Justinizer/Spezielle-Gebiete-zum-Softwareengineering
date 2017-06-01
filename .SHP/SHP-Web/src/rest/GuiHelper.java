@@ -59,6 +59,7 @@ public class GuiHelper {
 				condition.put("value", c.getValue());
 				condition.put("type", c.getType());
 				condition.put("thing", c.getThing().getId());
+				condition.put("device name", c.getThing().getName());
 				//inner.put("" +c.getId(), condition);
 				inner.append("condition", condition);
 			}
@@ -69,6 +70,7 @@ public class GuiHelper {
 				action.put("value", a.getValue());
 				action.put("name", a.getName());
 				action.put("thing", a.getThing().getId());
+				action.put("device name", a.getThing().getName());
 				//inner.put("" + a.getId(), action);
 				inner.append("action", action);
 			}

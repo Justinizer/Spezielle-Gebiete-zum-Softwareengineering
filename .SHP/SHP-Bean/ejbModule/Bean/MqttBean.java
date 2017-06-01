@@ -21,6 +21,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
+import Model.Action;
 import Model.Automation;
 import Model.Condition;
 import Model.SensorData;
@@ -46,8 +47,8 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	private Map<String, Thing> things = new HashMap<String, Thing>();
 
 	private Map<String, List<Automation>> autos = new HashMap<String, List<Automation>>();
-	
-	public MqttBean() {		
+
+	public MqttBean() {
 
 	}
 
@@ -78,73 +79,82 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		}
 
 	}
-	
-	public void testi(){
+
+	public void testi() {
 		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
 	}
-	
-	private Map<String, List<Automation>> buildTopicAutomationMap(){
+
+	private Map<String, List<Automation>> buildTopicAutomationMap() {
 		Map<String, List<Automation>> map = new HashMap<String, List<Automation>>();
-		
-		List<Automation> autolist =  em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();
+
+		List<Automation> autolist = em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();
 		/* loop all conditions in all automations */
-		for(Automation a:autolist){
-			for(Condition c:a.getConditions()){
-				/* get the mqtt topic for the condition */
-				String key = c.getThing().getMqttTopic();
-				
-				/* check if the topic is already in the map */
-				if(map.containsKey(key)){
-					List<Automation> tmpList = map.get(key);
-					/* check if the automation is already in the list, if not, it needs to be added */
-					if(!tmpList.contains(a)){
-						tmpList.add(a);
-						map.put(key,tmpList);
+		for (Automation a : autolist) {
+			List<Condition> conditionList = a.getConditions();
+			if (conditionList != null) {
+				for (Condition c : a.getConditions()) {
+					/* get the mqtt topic for the condition */
+					String key = c.getThing().getMqttTopic();
+
+					/* check if the topic is already in the map */
+					if (map.containsKey(key)) {
+						List<Automation> tmpList = map.get(key);
+						/*
+						 * check if the automation is already in the list, if
+						 * not, it needs to be added
+						 */
+						if (!tmpList.contains(a)) {
+							tmpList.add(a);
+							map.put(key, tmpList);
+						}
+					} else {
+						/* the topic was not in the map, it needs to be added */
+						List<Automation> newList = new ArrayList<Automation>();
+						newList.add(a);
+						map.put(key, newList);
 					}
-				}else {
-					/* the topic was not in the map, it needs to be added */
-					List<Automation> newList = new ArrayList<Automation>();
-					newList.add(a);
-					map.put(key,newList);
 				}
 			}
 		}
 		return map;
 	}
 
-	
-
 	@Override
 	public void messageArrived(String topic, MqttMessage arg1) {
 		System.out.println(topic + " " + new String(arg1.getPayload()));
 		Thing databaseThing = things.get(topic);
 		SensorData data = new SensorData(new String(arg1.getPayload()), databaseThing);
-		
+
 		hb.addData(data);
-		/* warum ich den umweg über die hb gehe und nicht einfach em.persis(data) mache? weils nicht geht... 
-		 * namedquerrys gehen, persist nicht :( */
-		
-		
-		
+		/*
+		 * warum ich den umweg über die hb gehe und nicht einfach
+		 * em.persis(data) mache? weils nicht geht... namedquerrys gehen,
+		 * persist nicht :(
+		 */
 
 		List<Automation> affectedAutos = autos.get(topic);
-		if(affectedAutos == null){
+		if (affectedAutos == null) {
 			return;
 		}
-		
-		for(Automation a: affectedAutos){
+
+		for (Automation a : affectedAutos) {
 			System.out.println("affected: " + a.getName());
-			if(a.fulfilled(data.getValue(), topic)){
-				//FIRE!			
-				System.out.println(a.getName() + " will fire!");
+			if (a.fulfilled(data.getValue(), topic)) {
+				// FIRE!
+				System.out.println(a.getName() + "  firing!");
+				for(Action action:a.getActions()){
+					publish(action.getThing().getMqttTopic(), action.getValue());
+				}
+				
+				
 			}
 		}
-		
+
 	}
-	
-	
-	/** 
+
+	/**
 	 * check if the mqtt client is ready, if not, connect it
+	 * 
 	 * @return false = client cant be connected
 	 */
 	private boolean checkMqttClient() {
@@ -163,16 +173,18 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		}
 		return client.isConnected();
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#publish(java.lang.String, java.lang.String)
 	 */
 	@Override
 	public boolean publish(String t, String message) {
-		if (!checkMqttClient()){
+		if (!checkMqttClient()) {
 			return false;
 		}
-		try {						
+		try {
 			client.publish(t, new MqttMessage(message.getBytes()));
 			System.out.println("done");
 			return true;
@@ -183,9 +195,6 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 
 	}
 
-
-
-	
 	/**
 	 * Sleep 2 seconds
 	 */
@@ -196,24 +205,28 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		}
 	}
 
-
 	@Override
 	public void connectionLost(Throwable arg0) {
 		System.out.println("DC!");
 		sleep2k();
 		while (!client.isConnected()) {
 			System.out.println("connect...");
-			try {				
+			try {
 				client.connect();
 			} catch (MqttException e) {
 				System.out.println("connect Failed!");
-				sleep2k();				
+				sleep2k();
 			}
 		}
 	}
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
+	}
+
+	@Override
+	public void reloadAutomations() {
+		init();
 	}
 
 }

@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.json.JsonObject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -96,8 +95,11 @@ public class Gui implements Serializable {
 	@GET
 	@Path("thing")
 	public String getThings() {
-		List<Thing> things = bh.getAllThings();
+		List<Thing> things = bh.getAllThings();		
 		JSONObject json = new JSONObject();
+		if(things == null){
+			return helper.getFail().toString();
+		}
 		for (Thing t : things) {
 			JSONObject inner = new JSONObject();
 			inner.put("id", t.getId());
@@ -191,7 +193,7 @@ public class Gui implements Serializable {
 	@Produces("application/json")
 	@GET
 	@Path("automation/action/{name}/{autoid}/{thing}/{value}")
-	public String addCondition(@PathParam("name") String actionname, @PathParam("autoid") int auto,@PathParam("thing") int thing, @PathParam("value") String value) {
+	public String addAction(@PathParam("name") String actionname, @PathParam("autoid") int auto,@PathParam("thing") int thing, @PathParam("value") String value) {
 		Automation a = bh.getAutomationById(auto);
 		Thing t = bh.getThingById(thing);
 		if( t == null || a == null){

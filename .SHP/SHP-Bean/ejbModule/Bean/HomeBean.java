@@ -258,6 +258,7 @@ public class HomeBean implements HomeBeanRemote {
 		Automation auto = new Automation(automationName);
 		em.persist(auto);
 		em.flush();
+		mb.reloadAutomations();
 		
 	}
 
@@ -271,6 +272,7 @@ public class HomeBean implements HomeBeanRemote {
 		}
 		em.persist(c);
 		em.flush();
+		mb.reloadAutomations();
 		
 	}
 
@@ -295,6 +297,7 @@ public class HomeBean implements HomeBeanRemote {
 		}
 		em.persist(a);
 		em.flush();
+		mb.reloadAutomations();
 		
 	}
 }
