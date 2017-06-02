@@ -10,5 +10,6 @@ extern uint8_t command_buffer[];
 extern int received_command_bytes;
 
 void transmit_data_to_pc(int pm2_5, int pm10);
+void send_string(const char *string);
 
 #endif

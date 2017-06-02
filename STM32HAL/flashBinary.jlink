@@ -1,0 +1,5 @@
+connect
+loadfile build/STM32USB.bin 0x08000000
+r
+go
+exit
