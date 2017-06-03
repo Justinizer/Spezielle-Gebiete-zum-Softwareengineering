@@ -8,8 +8,6 @@ void sds011_init(UART_HandleTypeDef *huart) {
 void sds011_get_sensor_data(UART_HandleTypeDef *huart, int *pm2_5, int *pm10) {
 	uint8_t data[4];
 
-	//sds011_set_mode(huart, WAKEUP);
-
 	data[0] = SDS011_CMD_QUERY_DATA;
 	sds011_send_command(huart, data, 1);
 	sds011_receive_response(huart, data, 4);
@@ -22,8 +20,6 @@ void sds011_get_sensor_data(UART_HandleTypeDef *huart, int *pm2_5, int *pm10) {
 	if (pm10) {
     	*pm10 = (data[3] << 8) | data[2];
 	}
-
-	//sds011_set_mode(huart, SLEEP);
 }
 
 void sds011_set_mode(UART_HandleTypeDef *huart, SDS011_MODE mode) {
@@ -74,7 +70,6 @@ void sds011_send_command(UART_HandleTypeDef *huart, uint8_t *data, int datalen) 
 	cmd_buffer[18] = SDS011_PACKET_TAIL;
 
 	HAL_UART_Transmit(huart, cmd_buffer, 19, SDS011_READ_TIMEOUT);
-	//sds011_receive_response(huart, cmd_buffer, 4);
 }
 
 void sds011_receive_response(UART_HandleTypeDef *huart, uint8_t *buffer, int bufferlen) {
