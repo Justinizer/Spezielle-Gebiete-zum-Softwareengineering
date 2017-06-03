@@ -11,12 +11,13 @@
 static inline void dht22_set_pin_low(GPIO_TypeDef *gpio, int pin) {
 	GPIO_InitTypeDef GPIO_InitStruct;
 
+	// Set pin to output
 	GPIO_InitStruct.Pin = pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;	// Open Drain Mode
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
 	HAL_GPIO_Init(gpio, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(gpio, pin, 0);
+	HAL_GPIO_WritePin(gpio, pin, 0);	// 0: Activate N-MOS -> Connect pin to ground
 }
 
 static inline void dht22_set_pin_input(GPIO_TypeDef *gpio, int pin) {
@@ -24,7 +25,6 @@ static inline void dht22_set_pin_input(GPIO_TypeDef *gpio, int pin) {
 
 	GPIO_InitStruct.Pin = pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
 	HAL_GPIO_Init(gpio, &GPIO_InitStruct);
 }
