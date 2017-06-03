@@ -3,7 +3,10 @@
 #include "stm32f1xx_hal_uart.h"
 #include <string.h>
 
+#define TRANSMIT_BUFFER_SIZE	30
+
 extern UART_HandleTypeDef huart1;
+
 
 void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity) {
 	char buffer[TRANSMIT_BUFFER_SIZE];

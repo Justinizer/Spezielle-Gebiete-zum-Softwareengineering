@@ -77,11 +77,11 @@ int dht22_get_data(GPIO_TypeDef *gpio, int pin, int *temperature, int *humidity)
 
 
 	if (temperature) {
-		*temperature = (input_buffer[0] << 8) | input_buffer[1];
+		*temperature = (input_buffer[2] << 8) | input_buffer[3];
 	}
 
 	if (humidity) {
-		*humidity = (input_buffer[2] << 8) | input_buffer[3];
+		*humidity = (input_buffer[0] << 8) | input_buffer[1];
 	}
 
 
