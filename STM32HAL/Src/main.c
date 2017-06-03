@@ -53,7 +53,15 @@
 /* USER CODE BEGIN Includes */
 #include "communication.h"
 #include "sds011.h"
+#include "dht22.h"
 
+#define DHT22_PORT					GPIOA
+#define DHT22_PIN					GPIO_PIN_0
+#define NUMBER_OF_MEASUREMENTS		10		// Do x measurements
+#define WAIT_AFTER_INITIALISATION	30000	// Wait x seconds after the initialisation of the particle sensor
+#define WAIT_AFTER_WAKEUP			30000	// Wait x seconds after sending wakeup command to particle sensor
+#define WAIT_MEASURE_LOOP			3000	// Wait x seconds between two measurements
+#define WAIT_AFTER_MEASURE			60000	// Wait x seconds after measuring
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -84,8 +92,10 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	int pm2_5 = 0;
-	int pm10 = 0;
+	int pm2_5;
+	int pm10;
+	int temp;
+	int hum;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -94,7 +104,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  __HAL_RCC_GPIOA_CLK_ENABLE();	// Enable GPIOA clock for DHT22
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -108,12 +118,12 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  MX_USB_DEVICE_Init();
+  //MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
-	sds011_init(&huart2);
-	HAL_Delay(30000);
-	send_string("Initialisiert.\n");
+  sds011_init(&huart2);
+  HAL_Delay(WAIT_AFTER_INITIALISATION);
+	//send_string("Initialisiert.\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,27 +135,21 @@ int main(void)
   /* USER CODE BEGIN 3 */
 		send_string("Wakeup particlesensor...\n");
 		sds011_set_mode(&huart2, WAKEUP);
-		HAL_Delay(30000);
-
-		/*if (received_command_bytes) {
-			CDC_Transmit_FS(command_buffer, received_command_bytes);
-			received_command_bytes = 0;
-		}*/
-		//CDC_Transmit_FS("Hello, World!\n", 14);
-		//HAL_Delay(1000);
+		HAL_Delay(WAIT_AFTER_WAKEUP);
 
 		send_string("Measure...\n");
 		int i;
-		for (i = 0; i < 10; i++) {
+		for (i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
 			sds011_get_sensor_data(&huart2, &pm2_5, &pm10);
-			transmit_data_to_pc(pm2_5, pm10);
-			HAL_Delay(1000);
-		}
-		//HAL_Delay(1000);
+			dht22_get_data(DHT22_PORT, DHT22_PIN, &temp, &hum);	// TODO: maybe check return value
+			transmit_data_to_pc(pm2_5, pm10, temp, hum);
+			HAL_Delay(WAIT_MEASURE_LOOP);
+		};
 
 		send_string("Send sleep command to particlesensor...\n");
 		sds011_set_mode(&huart2, SLEEP);
-		HAL_Delay(60000);  // wait 1 min
+		HAL_Delay(WAIT_AFTER_MEASURE);  // wait 1 min
+
 	}
   /* USER CODE END 3 */
 
