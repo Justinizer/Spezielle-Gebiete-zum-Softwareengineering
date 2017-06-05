@@ -47,6 +47,13 @@
 /* Private define ------------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
+enum {
+	STATE_WAKEUP_PARTICLE_SENSOR,
+	STATE_WAIT_AFTER_WAKEUP,
+	STATE_GET_SENSOR_DATA_LOOP,
+	STATE_WAIT_IN_LOOP,
+	STATE_WAIT_MAIN_LOOP
+};
 
 /* USER CODE END Private defines */
 

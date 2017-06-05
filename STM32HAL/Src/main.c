@@ -54,6 +54,8 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
@@ -67,6 +69,9 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);                                    
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+                                
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -85,6 +90,10 @@ int main(void)
 	int pm10;
 	int temp;
 	int hum;
+	int state = STATE_WAKEUP_PARTICLE_SENSOR;
+	int timestamp;
+	int measurements;
+	int send_data_to_pc_flag;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -93,7 +102,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  __HAL_RCC_GPIOA_CLK_ENABLE();	// Enable GPIOA clock for DHT22
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -107,8 +116,11 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
+  //Timer2_Init();
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   sds011_init(&huart2);
   HAL_Delay(WAIT_AFTER_INITIALISATION);
 	//send_string("Initialisiert.\n");
@@ -121,23 +133,52 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		send_string("Wakeup particlesensor...\n");
-		sds011_set_mode(&huart2, WAKEUP);
-		HAL_Delay(WAIT_AFTER_WAKEUP);
+		switch (state) {
+			case STATE_WAKEUP_PARTICLE_SENSOR:
+				send_string("Wakeup particlesensor...\n");
+				sds011_set_mode(&huart2, WAKEUP);
+				timestamp = HAL_GetTick();
+				state = STATE_WAIT_AFTER_WAKEUP;
+				break;
 
-		send_string("Measure...\n");
-		int i;
-		for (i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
-			sds011_get_sensor_data(&huart2, &pm2_5, &pm10);
-			dht22_get_data(DHT22_PORT, DHT22_PIN, &temp, &hum);	// TODO: maybe check return value
-			transmit_data_to_pc(pm2_5, pm10, temp, hum);
-			HAL_Delay(WAIT_MEASURE_LOOP);
-		};
+			case STATE_WAIT_AFTER_WAKEUP:
+				if ((HAL_GetTick() - timestamp) >= WAIT_AFTER_WAKEUP) {
+					measurements = 0;
+					send_string("Measure...\n");
+					state = STATE_GET_SENSOR_DATA_LOOP;
+				}
+				break;
 
-		send_string("Send sleep command to particlesensor...\n");
-		sds011_set_mode(&huart2, SLEEP);
-		HAL_Delay(WAIT_AFTER_MEASURE);  // wait 1 min
+			case STATE_GET_SENSOR_DATA_LOOP:
+				sds011_get_sensor_data(&huart2, &pm2_5, &pm10);
+				dht22_get_data(DHT22_PORT, DHT22_PIN, &temp, &hum);	// TODO: maybe check return value
+				transmit_data_to_pc(pm2_5, pm10, temp, hum);
+				measurements++;
+				timestamp = HAL_GetTick();
 
+				if (measurements < NUMBER_OF_MEASUREMENTS) {
+					state = STATE_WAIT_IN_LOOP;
+
+				} else {
+					send_string("Send sleep command to particle sensor...\n");
+					sds011_set_mode(&huart2, SLEEP);
+					state = STATE_WAIT_MAIN_LOOP;
+				}
+
+				break;
+
+			case STATE_WAIT_IN_LOOP:
+				if ((HAL_GetTick() - timestamp) >= WAIT_MEASURE_LOOP) {
+					state = STATE_GET_SENSOR_DATA_LOOP;
+				}
+				break;
+
+			case STATE_WAIT_MAIN_LOOP:
+				if ((HAL_GetTick() - timestamp) >= WAIT_AFTER_MEASURE) {
+					state = STATE_WAKEUP_PARTICLE_SENSOR;
+				}
+				break;
+		}
 	}
   /* USER CODE END 3 */
 
@@ -189,6 +230,55 @@ void SystemClock_Config(void)
 
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+}
+
+/* TIM2 init function */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+  TIM_OC_InitTypeDef sConfigOC;
+
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 1599;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 799;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  HAL_TIM_MspPostInit(&htim2);
+
 }
 
 /* USART1 init function */
@@ -246,7 +336,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 
 /* USER CODE END 4 */
 
