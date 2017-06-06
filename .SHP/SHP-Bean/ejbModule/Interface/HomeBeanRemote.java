@@ -117,7 +117,18 @@ public interface HomeBeanRemote {
 	
 	public void addAction(Action a);
 	
+	public boolean deleteAction(int actionid);
 	
+	public boolean deleteCondition(int conditionid);
+	
+	/**
+	 * update a given automation
+	 * @param autoid the id
+	 * @param name the new name. if name == null or name.length <1, name will be ignored and the old one is kept
+	 * @param active
+	 * @return
+	 */
+	public boolean updateAutomation(int autoid, String name, boolean active);
 	
 	
 	

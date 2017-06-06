@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -179,6 +180,10 @@ public class Gui implements Serializable {
 		return json.toString();
 	}
 
+	/**
+	 * get a list of all automation, with the actions and conditions
+	 * @return
+	 */
 	@Produces("application/json")
 	@GET
 	@Path("automation")
@@ -188,6 +193,11 @@ public class Gui implements Serializable {
 		return json.toString();
 	}
 
+	/**
+	 * create a new automation
+	 * @param autoname the name of the automation
+	 * @return
+	 */
 	@Produces("application/json")
 	@PUT
 	@Path("automation")
@@ -196,6 +206,14 @@ public class Gui implements Serializable {
 		return helper.getSuccess().toString();
 	}
 
+	/**
+	 * add a new condition to an automation
+	 * @param autoid the id of the automation
+	 * @param thingid the id of the thing
+	 * @param type the type of the condition (0-5) -> Seen conditiontype
+	 * @param value the value that must be reached
+	 * @return
+	 */
 	@Produces("application/json")
 	@PUT
 	@Path("automation/condition")
@@ -213,8 +231,16 @@ public class Gui implements Serializable {
 		return helper.getSuccess().toString();
 	}
 
+	/**
+	 * add an action to an automation
+	 * @param actionname name of the action
+	 * @param auto id of the automation
+	 * @param thing id of the thing
+	 * @param value value that should be set, when fireing the action
+	 * @return
+	 */
 	@Produces("application/json")
-	@POST
+	@PUT
 	@Path("automation/action")
 	public String addAction(@FormParam("name") String actionname, @FormParam("autoid") int auto,
 			@FormParam("thing") int thing, @FormParam("value") String value) {
@@ -228,5 +254,56 @@ public class Gui implements Serializable {
 
 		return helper.getSuccess().toString();
 	}
+	
+	
+	/**
+	 * delete an action
+	 * @param actionid  the id of the action
+	 * @return success = done
+	 */
+	@Produces("application/json")
+	@DELETE
+	@Path("automation/action/{actionid}")
+	public String deleteAction(@PathParam("actionid") int actionid) {
+		bh.deleteAction(actionid);
+		return helper.getSuccess().toString();
+	}
+	
+	
+	/**
+	 * delete an condition
+	 * @param conditionid  the id of the action
+	 * @return success = done
+	 */
+	@Produces("application/json")
+	@DELETE
+	@Path("automation/condition/{conditionid}")
+	public String deleteCondtition(@PathParam("conditionid") int conditionid) {
+		bh.deleteCondition(conditionid);
+		return helper.getSuccess().toString();
+	}
+	
+	/**
+	 * update a given automation
+	 * @param autoid the id of the automation
+	 * @param name   the new name. if name == null or name.length <1, name will be ignored and the old one is kept
+	 * @param active
+	 * @return
+	 */
+	@Produces("application/json")
+	@POST
+	@Path("automation")
+	public String updateAutomation(@FormParam("automationid") int autoid,@FormParam("name") String name,@FormParam("active") boolean active) {
+		if(bh.updateAutomation(autoid, name, active)){
+			return helper.getSuccess().toString();			
+		}else {
+			return helper.getFail().toString();
+		}		
+	}
+	
+	
+	
+	
+	
 
 }
