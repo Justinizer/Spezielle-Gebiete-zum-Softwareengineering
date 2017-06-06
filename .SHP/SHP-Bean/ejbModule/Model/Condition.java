@@ -115,16 +115,22 @@ public class Condition implements Serializable {
 		switch (type) {
 		case equal:
 			retval = newValue.equals(value);
+			break;
 		case notEqual:
 			retval = !newValue.equals(value);
+			break;
 		case smaller:
 			retval = newValueFloat < triggerFloat;
+			break;
 		case smallerThan:
 			retval = newValueFloat <= triggerFloat;
+			break;
 		case greater:
 			retval = newValueFloat > triggerFloat;
+			break;
 		case greaterThan:
 			retval = newValueFloat >= triggerFloat;
+			break;
 		}
 		lastFulfillmentStatus = retval;
 		return retval;

@@ -88,7 +88,7 @@ public class Automation implements Serializable {
 		}
 		
 		boolean allTrue = true;
-		System.out.println("in automation " + conditions.size());
+		System.out.println("in automation " + id + " conditions:" + conditions.size());
 		
 		/* check all conditions of the automation */
 		for(Condition c:conditions){
