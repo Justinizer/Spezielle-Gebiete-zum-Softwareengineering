@@ -19,6 +19,6 @@
  * @param humidity [out]: Pointer to a variable in which the humidity value should be stored. Can be NULL.
  * @return 1 if there was a checksum error. 0 otherwise.
  */
-int dht22_get_data(GPIO_TypeDef *gpio, int pin, int *temperature, int *humidity);
+int dht22_get_data(GPIO_TypeDef *gpio, int pin, uint16_t *temperature, uint16_t *humidity);
 
 #endif /* DHT22_H_ */

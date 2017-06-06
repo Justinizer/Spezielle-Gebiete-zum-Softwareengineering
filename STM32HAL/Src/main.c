@@ -64,6 +64,9 @@ UART_HandleTypeDef huart2;
 uint8_t uart2_receive_buffer[PC_COMMAND_PACKET_SIZE];
 uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
 volatile uint8_t pc_command_received_flag;
+volatile uint8_t pc_command_byte;
+
+uint16_t sensor_value_buffer[NUMBER_OF_MEASUREMENTS][4];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,7 +80,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+static void set_brightness(uint8_t percent);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -88,14 +91,13 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	int pm2_5;
-	int pm10;
-	int temp;
-	int hum;
-	int state = STATE_WAKEUP_PARTICLE_SENSOR;
-	int timestamp;
-	int measurements;
-	int send_data_to_pc_flag;
+	uint16_t pm2_5 = 0;
+	uint16_t pm10 = 0;
+	uint16_t temp = 0;
+	uint16_t hum = 0;
+	uint8_t state = STATE_WAKEUP_PARTICLE_SENSOR;
+	int timestamp = 0;
+	int measurements = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -121,7 +123,7 @@ int main(void)
   MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart1, uart2_receive_buffer, PC_COMMAND_PACKET_SIZE);
+  HAL_UART_Receive_IT(&huart1, uart2_receive_buffer, 1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   sds011_init(&huart2);
   HAL_Delay(WAIT_AFTER_INITIALISATION);
@@ -139,7 +141,19 @@ int main(void)
 		// Echo pc command
 		if (pc_command_received_flag) {
 			pc_command_received_flag = 0;
-			HAL_UART_Transmit(&huart1, pc_command, PC_COMMAND_PACKET_SIZE, 1000);
+
+			switch (pc_command[1]) {
+				case GET_SENSOR_VALUES:
+					transmit_data_to_pc(pm2_5, pm10, temp, hum);
+					break;
+
+				case SET_BRIGHTNESS:
+					set_brightness(pc_command[2]);
+					break;
+
+				default:
+					break;
+			}
 		}
 
 
@@ -160,9 +174,11 @@ int main(void)
 				break;
 
 			case STATE_GET_SENSOR_DATA_LOOP:
-				sds011_get_sensor_data(&huart2, &pm2_5, &pm10);
-				dht22_get_data(DHT22_PORT, DHT22_PIN, &temp, &hum);	// TODO: maybe check return value
-				transmit_data_to_pc(pm2_5, pm10, temp, hum);
+				sds011_get_sensor_data(&huart2, &(sensor_value_buffer[measurements][0]), &(sensor_value_buffer[measurements][1]));
+				dht22_get_data(DHT22_PORT, DHT22_PIN, &(sensor_value_buffer[measurements][2]), &(sensor_value_buffer[measurements][3]));
+				//sds011_get_sensor_data(&huart2, &pm2_5, &pm10);
+				//dht22_get_data(DHT22_PORT, DHT22_PIN, &temp, &hum);	// TODO: maybe check return value
+				//transmit_data_to_pc(pm2_5, pm10, temp, hum);
 				measurements++;
 				timestamp = HAL_GetTick();
 
@@ -172,6 +188,22 @@ int main(void)
 				} else {
 					send_string("Send sleep command to particle sensor...\n");
 					sds011_set_mode(&huart2, SLEEP);
+
+					pm2_5 = 0; pm10 = 0;
+					temp = 0; hum = 0;
+					int i;
+					for (i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
+						pm2_5 += sensor_value_buffer[i][0];
+						pm10 += sensor_value_buffer[i][1];
+						temp += sensor_value_buffer[i][2];
+						hum += sensor_value_buffer[i][3];
+					}
+
+					pm2_5 /= NUMBER_OF_MEASUREMENTS;
+					pm10 /= NUMBER_OF_MEASUREMENTS;
+					temp /= NUMBER_OF_MEASUREMENTS;
+					hum /= NUMBER_OF_MEASUREMENTS;
+
 					state = STATE_WAIT_MAIN_LOOP;
 				}
 
@@ -346,7 +378,20 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void set_brightness(uint8_t percent) {
+	TIM_OC_InitTypeDef tim_oc;
 
+	if (percent > 100) {
+		percent = 100;
+	}
+
+	tim_oc.Pulse = (1599 / 100) * percent;
+	tim_oc.OCMode = TIM_OCMODE_PWM1;
+	tim_oc.OCPolarity = TIM_OCPOLARITY_HIGH;
+	tim_oc.OCFastMode = TIM_OCFAST_DISABLE;
+
+	HAL_TIM_PWM_ConfigChannel(&htim2, &tim_oc, TIM_CHANNEL_2);
+}
 /* USER CODE END 4 */
 
 /**

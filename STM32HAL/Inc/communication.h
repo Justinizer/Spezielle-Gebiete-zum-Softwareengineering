@@ -1,7 +1,28 @@
 #ifndef _COMMUNICATION_H_
 #define _COMMUNICATION_H_
 
-#define PC_COMMAND_PACKET_SIZE	4
+#define PC_COMMAND_PACKET_SIZE			4
+#define PC_COMMAND_HEADER				0xAA
+#define PC_COMMAND_TAIL					0xFF
+
+enum {
+	GET_SENSOR_VALUES = 0x01,	// No parameter -> 0x00
+	SET_BRIGHTNESS				// Brightness in percent as parameter. Valid values: 0 - 100
+} PC_COMMAND_ID;
+
+/*
+ * A command packet is constructed as follows:
+ * +----+---------------+
+ * |0x00| Header (0xAA) |
+ * +----+---------------+
+ * |0x01|  Command ID   |
+ * +----+---------------+
+ * |0x02|   Parameter   |
+ * +----+---------------+
+ * |0x03|  Tail (0xFF)  |
+ * +----+---------------+
+ *
+ */
 
 /**
  * Transmits sensor values over UART to the connected PC.
@@ -20,7 +41,5 @@ void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity);
  * @param string: String which should be transmitted.
  */
 void send_string(const char *string);
-
-void receive_command(const char *data);
 
 #endif

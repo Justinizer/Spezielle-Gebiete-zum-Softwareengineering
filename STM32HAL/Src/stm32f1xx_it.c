@@ -41,7 +41,8 @@
 
 extern uint8_t uart2_receive_buffer[PC_COMMAND_PACKET_SIZE];
 extern uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
-extern uint8_t pc_command_received_flag;
+extern volatile uint8_t pc_command_received_flag;
+extern volatile uint8_t pc_command_byte;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -212,9 +213,17 @@ void USART1_IRQHandler(void)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  memcpy(pc_command, uart2_receive_buffer, PC_COMMAND_PACKET_SIZE);
-  HAL_UART_Receive_IT(huart, uart2_receive_buffer, PC_COMMAND_PACKET_SIZE);
-  pc_command_received_flag = 1;
+  if (pc_command_byte || uart2_receive_buffer[0] == PC_COMMAND_HEADER) {
+	  pc_command[pc_command_byte] = uart2_receive_buffer[0];
+	  pc_command_byte++;
+
+	  if (pc_command_byte == PC_COMMAND_HEADER - 1) {
+		  pc_command_received_flag = 1;
+		  pc_command_byte = 0;
+	  }
+  }
+
+  HAL_UART_Receive_IT(huart, uart2_receive_buffer, 1);
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

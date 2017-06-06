@@ -29,7 +29,7 @@ static inline void dht22_set_pin_input(GPIO_TypeDef *gpio, int pin) {
 	HAL_GPIO_Init(gpio, &GPIO_InitStruct);
 }
 
-int dht22_get_data(GPIO_TypeDef *gpio, int pin, int *temperature, int *humidity) {
+int dht22_get_data(GPIO_TypeDef *gpio, int pin, uint16_t *temperature, uint16_t *humidity) {
 	uint8_t input_buffer[5];
 
 	dht22_set_pin_low(gpio, pin);

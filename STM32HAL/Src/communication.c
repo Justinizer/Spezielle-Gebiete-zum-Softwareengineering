@@ -6,6 +6,7 @@
 #define TRANSMIT_BUFFER_SIZE	30
 
 extern UART_HandleTypeDef huart1;
+extern uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
 
 
 void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity) {
@@ -18,8 +19,4 @@ void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity) {
 
 void send_string(const char *string) {
 	HAL_UART_Transmit(&huart1, (uint8_t *)string, strlen(string), 1000);
-}
-
-void receive_command(const char *data) {
-
 }
