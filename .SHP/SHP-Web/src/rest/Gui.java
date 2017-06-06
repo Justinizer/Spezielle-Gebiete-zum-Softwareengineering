@@ -189,18 +189,18 @@ public class Gui implements Serializable {
 	}
 
 	@Produces("application/json")
-	@GET
-	@Path("automation/{name}")
-	public String addAutomations(@PathParam("name") String autoname) {
+	@PUT
+	@Path("automation")
+	public String addAutomations(@FormParam("name") String autoname) {
 		bh.addAutomation(autoname);
 		return helper.getSuccess().toString();
 	}
 
 	@Produces("application/json")
-	@GET
-	@Path("automation/condition/{autoid}/{thingid}/{type}/{value}")
-	public String addCondition(@PathParam("autoid") int autoid, @PathParam("thingid") int thingid,
-			@PathParam("type") int type, @PathParam("value") String value) {
+	@PUT
+	@Path("automation/condition")
+	public String addCondition(@FormParam("autoid") int autoid, @FormParam("thingid") int thingid,
+			@FormParam("type") int type, @FormParam("value") String value) {
 		Automation a = bh.getAutomationById(autoid);
 		Thing t = bh.getThingById(thingid);
 		ConditionType ct = ConditionType.getByIndex(type);
@@ -214,10 +214,10 @@ public class Gui implements Serializable {
 	}
 
 	@Produces("application/json")
-	@GET
-	@Path("automation/action/{name}/{autoid}/{thing}/{value}")
-	public String addAction(@PathParam("name") String actionname, @PathParam("autoid") int auto,
-			@PathParam("thing") int thing, @PathParam("value") String value) {
+	@POST
+	@Path("automation/action")
+	public String addAction(@FormParam("name") String actionname, @FormParam("autoid") int auto,
+			@FormParam("thing") int thing, @FormParam("value") String value) {
 		Automation a = bh.getAutomationById(auto);
 		Thing t = bh.getThingById(thing);
 		if (t == null || a == null) {
