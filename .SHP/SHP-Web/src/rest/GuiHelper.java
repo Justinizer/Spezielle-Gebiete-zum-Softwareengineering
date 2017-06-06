@@ -52,7 +52,7 @@ public class GuiHelper {
 			JSONObject inner = new JSONObject();
 			inner.put("name", auto.getName());
 			inner.put("id", auto.getId());
-			
+			inner.put("active", auto.isActive());
 			for (Condition c : auto.getConditions()) {
 				JSONObject condition = new JSONObject();
 				condition.put("id", c.getId());

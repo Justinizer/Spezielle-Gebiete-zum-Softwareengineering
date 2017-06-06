@@ -5,7 +5,10 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -64,6 +67,23 @@ public class Gui implements Serializable {
 		return json.toString();
 	}
 
+	@POST
+	@Path("/login")
+	@Produces("application/json")
+	public String createUser(@FormParam("email") String email, @FormParam("password") String password){
+		System.out.println("got sth");
+		System.out.println(email);
+		System.out.println(email);
+		JSONObject json;
+		if (bh.checkLogin(email, password)) {
+			json = helper.getSuccess();
+		} else {
+			json = helper.getFail();
+		}
+
+		return json.toString();
+	}
+
 	/**
 	 * Rest Method to create a user
 	 * 
@@ -74,9 +94,9 @@ public class Gui implements Serializable {
 	 * @return json object with status either \"TRUE\" or \"FALSE"\
 	 */
 	@Produces("application/json")
-	@GET
-	@Path("create/{email}/{password}")
-	public String create(@PathParam("email") String email, @PathParam("password") String password) {
+	@PUT
+	@Path("create")
+	public String create(@FormParam("email") String email, @FormParam("password") String password) {
 		JSONObject json;
 		if (bh.createUser(email, password)) {
 			json = helper.getSuccess();
@@ -85,6 +105,9 @@ public class Gui implements Serializable {
 		}
 		return json.toString();
 	}
+	
+	
+	
 
 	/**
 	 * lists all things and the current value of each thing
@@ -95,16 +118,16 @@ public class Gui implements Serializable {
 	@GET
 	@Path("thing")
 	public String getThings() {
-		List<Thing> things = bh.getAllThings();		
+		List<Thing> things = bh.getAllThings();
 		JSONObject json = new JSONObject();
-		if(things == null){
+		if (things == null) {
 			return helper.getFail().toString();
 		}
 		for (Thing t : things) {
 			JSONObject inner = new JSONObject();
 			inner.put("id", t.getId());
 			inner.put("type", t.getType());
-			inner.put("name", t.getName());			
+			inner.put("name", t.getName());
 			inner.put("mqtttopic", t.getMqttTopic());
 			inner.put("currentValue", helper.getCurrentValue(t));
 			json.append("thing", inner);
@@ -161,7 +184,7 @@ public class Gui implements Serializable {
 	@Path("automation")
 	public String getAutomations() {
 		List<Automation> autos = bh.getAllAutomations();
-		JSONObject json = helper.listAutomations(autos);		
+		JSONObject json = helper.listAutomations(autos);
 		return json.toString();
 	}
 
@@ -172,39 +195,38 @@ public class Gui implements Serializable {
 		bh.addAutomation(autoname);
 		return helper.getSuccess().toString();
 	}
-	
+
 	@Produces("application/json")
 	@GET
 	@Path("automation/condition/{autoid}/{thingid}/{type}/{value}")
-	public String addCondition(@PathParam("autoid") int autoid, @PathParam("thingid") int thingid,@PathParam("type") int type, @PathParam("value") String value) {
+	public String addCondition(@PathParam("autoid") int autoid, @PathParam("thingid") int thingid,
+			@PathParam("type") int type, @PathParam("value") String value) {
 		Automation a = bh.getAutomationById(autoid);
 		Thing t = bh.getThingById(thingid);
 		ConditionType ct = ConditionType.getByIndex(type);
-		if(a == null || t ==null || ct == null){
+		if (a == null || t == null || ct == null) {
 			return helper.getFail().toString();
 		}
-		Condition c = new Condition(a,ct,t,value);
+		Condition c = new Condition(a, ct, t, value);
 		bh.addCondition(c);
-		
-		
+
 		return helper.getSuccess().toString();
 	}
-	
+
 	@Produces("application/json")
 	@GET
 	@Path("automation/action/{name}/{autoid}/{thing}/{value}")
-	public String addAction(@PathParam("name") String actionname, @PathParam("autoid") int auto,@PathParam("thing") int thing, @PathParam("value") String value) {
+	public String addAction(@PathParam("name") String actionname, @PathParam("autoid") int auto,
+			@PathParam("thing") int thing, @PathParam("value") String value) {
 		Automation a = bh.getAutomationById(auto);
 		Thing t = bh.getThingById(thing);
-		if( t == null || a == null){
+		if (t == null || a == null) {
 			return helper.getFail().toString();
 		}
 		Action action = new Action(actionname, value, t, a);
 		bh.addAction(action);
-		
-		
+
 		return helper.getSuccess().toString();
 	}
-	
 
 }
