@@ -5,6 +5,7 @@ import javax.persistence.*;
 
 /**
  * Entity implementation class for Entity: Condition
+ * Represents a condition for an automation. 
  *
  */
 @Entity(name = "\"Condition\"")
@@ -29,6 +30,9 @@ public class Condition implements Serializable {
 	private Thing thing;
 
 	private static final long serialVersionUID = 1L;
+
+	@Transient
+	private boolean lastFulfillmentStatus = false;
 
 	public Condition() {
 		super();
@@ -70,47 +74,60 @@ public class Condition implements Serializable {
 		return thing;
 	}
 
+	/**
+	 * check if the condition is fulfilled
+	 * 
+	 * @param newValue
+	 *            the new received value
+	 * @param topic
+	 *            on the topic
+	 * @return true = fulfilled
+	 */
 	public boolean fulfills(String newValue, String topic) {
+		boolean retval = false;
 
 		if (newValue == null) {
 			return false;
 		}
-		if(thing.getMqttTopic().equals(topic)){
+		/* check if the topic is matching the desired topic */
+		if (thing.getMqttTopic().equals(topic)) {
+			/* add data to instance */
 			thing.addData(newValue);
 		} else {
-			System.out.println("topic is different, getting last value");
-			SensorData lastData = thing.getLastSensorData();
-			if(lastData == null){
-				return false;
-			}
-			newValue = lastData.getValue();
-			
+			/* topic is not matching, return last Status */
+			System.out.println("topic is different, returning lastStatus");
+
+			return lastFulfillmentStatus;
+
 		}
-		
+
 		float newValueFloat = 0;
 		float triggerFloat = 0;
-		if (type != ConditionType.equal && type != ConditionType.notEqual) {			
+		/*
+		 * check if type conversion is required, not required for equal and not
+		 * equal
+		 */
+		if (type != ConditionType.equal && type != ConditionType.notEqual) {
 			newValueFloat = Float.parseFloat(newValue);
 			triggerFloat = Float.parseFloat(value);
 		}
-		
 
 		switch (type) {
 		case equal:
-			return newValue.equals(value);
+			retval = newValue.equals(value);
 		case notEqual:
-			return !newValue.equals(value);
+			retval = !newValue.equals(value);
 		case smaller:
-			return newValueFloat < triggerFloat;
+			retval = newValueFloat < triggerFloat;
 		case smallerThan:
-			return newValueFloat <= triggerFloat;
+			retval = newValueFloat <= triggerFloat;
 		case greater:
-			return newValueFloat > triggerFloat;
+			retval = newValueFloat > triggerFloat;
 		case greaterThan:
-			return newValueFloat >= triggerFloat;
+			retval = newValueFloat >= triggerFloat;
 		}
-
-		return false;
+		lastFulfillmentStatus = retval;
+		return retval;
 	}
 
 }

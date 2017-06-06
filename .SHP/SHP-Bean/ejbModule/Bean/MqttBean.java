@@ -52,20 +52,34 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 
 	}
 
+	/**
+	 * Initializes the mqtt client and connects to all topics
+	 */
 	@PostConstruct
 	public void init() {
 		System.out.println("----> MQTT BEAN STARTED <----");
+
+		/* get the mqtt conifg */
 		SystemConfig sc = hb.getSystemConfig();
 		System.out.println(sc.getMqttServer());
-		autos = buildTopicAutomationMap();
+
+		@SuppressWarnings("unchecked")
+		List<Automation> autolist = em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();
+
+		/* build the map (topic -> automations) */
+		autos = buildTopicAutomationMap(autolist);
 		try {
+
+			/* get all things form the database */
 			@SuppressWarnings("unchecked")
 			List<Thing> thingsList = (List<Thing>) em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
 
+			/* create and connect the mqttclient */
 			client = new MqttClient("tcp://" + sc.getMqttServer(), "SHP" + new Random().nextInt(500000));
 			client.connect();
 			client.setCallback(this);
 
+			/* subscribe to all necessary topics */
 			for (Thing t : thingsList) {
 				things.put(t.getMqttTopic(), t);
 				client.subscribe(t.getMqttTopic());
@@ -84,10 +98,18 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
 	}
 
-	private Map<String, List<Automation>> buildTopicAutomationMap() {
+	/**
+	 * builds a map - mqtt topic to automation each subscribed mqtt topic is
+	 * connected to at least one automation that needs to be checked, when new
+	 * data is available on that topic
+	 * 
+	 * @param autolist
+	 *            list of all automations
+	 * @return
+	 */
+	private Map<String, List<Automation>> buildTopicAutomationMap(List<Automation> autolist) {
 		Map<String, List<Automation>> map = new HashMap<String, List<Automation>>();
 
-		List<Automation> autolist = em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();
 		/* loop all conditions in all automations */
 		for (Automation a : autolist) {
 			List<Condition> conditionList = a.getConditions();
@@ -119,6 +141,9 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		return map;
 	}
 
+	/**
+	 * callback for the mqtt client. Is called, when a new message for a subsribed topic is received
+	 */
 	@Override
 	public void messageArrived(String topic, MqttMessage arg1) {
 		System.out.println(topic + " " + new String(arg1.getPayload()));
@@ -137,16 +162,18 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			return;
 		}
 
+		/* check all affected automations, if they fulfill the conditions */
 		for (Automation a : affectedAutos) {
 			System.out.println("affected: " + a.getName());
 			if (a.fulfilled(data.getValue(), topic)) {
-				// FIRE!
+				/* conditions are fulfilled: FIRE the actions */
+				
 				System.out.println(a.getName() + "  firing!");
-				for(Action action:a.getActions()){
+				/* fire all actions */
+				for (Action action : a.getActions()) {
 					publish(action.getThing().getMqttTopic(), action.getValue());
 				}
-				
-				
+
 			}
 		}
 
@@ -174,6 +201,36 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		return client.isConnected();
 	}
 
+	/**
+	 * Sleep 2 seconds
+	 */
+	private void sleep2k() {
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
+	}
+
+	@Override
+	public void connectionLost(Throwable arg0) {
+		/* if the connection is lost, wait two seconds, and try to reconnect */
+		System.out.println("DC!");
+		sleep2k();
+		while (!client.isConnected()) {
+			System.out.println("connect...");
+			try {
+				client.connect();
+			} catch (MqttException e) {
+				System.out.println("connect Failed!");
+				sleep2k();
+			}
+		}
+	}
+
+	@Override
+	public void deliveryComplete(IMqttDeliveryToken arg0) {
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -192,38 +249,13 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			e.printStackTrace();
 		}
 		return false;
-
 	}
 
-	/**
-	 * Sleep 2 seconds
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see Interface.MqttBeanRemote#reloadAutomations()
 	 */
-	private void sleep2k() {
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-		}
-	}
-
-	@Override
-	public void connectionLost(Throwable arg0) {
-		System.out.println("DC!");
-		sleep2k();
-		while (!client.isConnected()) {
-			System.out.println("connect...");
-			try {
-				client.connect();
-			} catch (MqttException e) {
-				System.out.println("connect Failed!");
-				sleep2k();
-			}
-		}
-	}
-
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken arg0) {
-	}
-
 	@Override
 	public void reloadAutomations() {
 		init();

@@ -2,17 +2,12 @@ package Bean;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
@@ -226,6 +221,7 @@ public class HomeBean implements HomeBeanRemote {
 	/* (non-Javadoc)
 	 * @see Interface.HomeBeanRemote#getAllAutomations()
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Automation> getAllAutomations() {
 		if(!isLoggedin){
