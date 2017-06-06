@@ -96,7 +96,7 @@ public class Gui implements Serializable {
 	 */
 	@Produces("application/json")
 	@PUT
-	@Path("create")
+	@Path("/login")
 	public String create(@FormParam("email") String email, @FormParam("password") String password) {
 		JSONObject json;
 		if (bh.createUser(email, password)) {
@@ -167,9 +167,9 @@ public class Gui implements Serializable {
 	 * @return all the data
 	 */
 	@Produces("application/json")
-	@GET
-	@Path("thing/{id}/{value}")
-	public String changeState(@PathParam("id") int id, @PathParam("value") String value) {
+	@POST
+	@Path("thing")
+	public String changeState(@FormParam("id") int id, @FormParam("value") String value) {
 		JSONObject json;
 
 		if (bh.publish(id, value)) {
