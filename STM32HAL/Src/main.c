@@ -159,7 +159,7 @@ int main(void)
 
 		switch (state) {
 			case STATE_WAKEUP_PARTICLE_SENSOR:
-				send_string("Wakeup particlesensor...\n");
+				//send_string("Wakeup particlesensor...\n");
 				sds011_set_mode(&huart2, WAKEUP);
 				timestamp = HAL_GetTick();
 				state = STATE_WAIT_AFTER_WAKEUP;
@@ -168,7 +168,7 @@ int main(void)
 			case STATE_WAIT_AFTER_WAKEUP:
 				if ((HAL_GetTick() - timestamp) >= WAIT_AFTER_WAKEUP) {
 					measurements = 0;
-					send_string("Measure...\n");
+					//send_string("Measure...\n");
 					state = STATE_GET_SENSOR_DATA_LOOP;
 				}
 				break;
@@ -186,7 +186,7 @@ int main(void)
 					state = STATE_WAIT_IN_LOOP;
 
 				} else {
-					send_string("Send sleep command to particle sensor...\n");
+					//send_string("Send sleep command to particle sensor...\n");
 					sds011_set_mode(&huart2, SLEEP);
 
 					pm2_5 = 0; pm10 = 0;

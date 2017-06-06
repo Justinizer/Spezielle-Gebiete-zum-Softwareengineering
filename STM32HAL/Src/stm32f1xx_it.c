@@ -217,7 +217,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	  pc_command[pc_command_byte] = uart2_receive_buffer[0];
 	  pc_command_byte++;
 
-	  if (pc_command_byte == PC_COMMAND_HEADER - 1) {
+	  if (pc_command_byte == PC_COMMAND_PACKET_SIZE) {
 		  pc_command_received_flag = 1;
 		  pc_command_byte = 0;
 	  }
