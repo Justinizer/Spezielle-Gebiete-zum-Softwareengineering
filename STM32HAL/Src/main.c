@@ -61,7 +61,9 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+uint8_t uart2_receive_buffer[PC_COMMAND_PACKET_SIZE];
+uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
+volatile uint8_t pc_command_received_flag;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,7 +121,7 @@ int main(void)
   MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
-  //Timer2_Init();
+  HAL_UART_Receive_IT(&huart1, uart2_receive_buffer, PC_COMMAND_PACKET_SIZE);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   sds011_init(&huart2);
   HAL_Delay(WAIT_AFTER_INITIALISATION);
@@ -133,6 +135,14 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+
+		// Echo pc command
+		if (pc_command_received_flag) {
+			pc_command_received_flag = 0;
+			HAL_UART_Transmit(&huart1, pc_command, PC_COMMAND_PACKET_SIZE, 1000);
+		}
+
+
 		switch (state) {
 			case STATE_WAKEUP_PARTICLE_SENSOR:
 				send_string("Wakeup particlesensor...\n");

@@ -36,10 +36,16 @@
 #include "stm32f1xx_it.h"
 
 /* USER CODE BEGIN 0 */
+#include "communication.h"
+#include <string.h>		// For memcpy()
 
+extern uint8_t uart2_receive_buffer[PC_COMMAND_PACKET_SIZE];
+extern uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
+extern uint8_t pc_command_received_flag;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern UART_HandleTypeDef huart1;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -183,7 +189,32 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
 
-/* USER CODE BEGIN 1 */
+/**
+* @brief This function handles USART1 global interrupt.
+*/
+void USART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART1_IRQn 0 */
 
+  /* USER CODE END USART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
+}
+
+/* USER CODE BEGIN 1 */
+/**
+  * @brief  Rx Transfer completed callbacks.
+  * @param  huart: Pointer to a UART_HandleTypeDef structure that contains
+  *                the configuration information for the specified UART module.
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  memcpy(pc_command, uart2_receive_buffer, PC_COMMAND_PACKET_SIZE);
+  HAL_UART_Receive_IT(huart, uart2_receive_buffer, PC_COMMAND_PACKET_SIZE);
+  pc_command_received_flag = 1;
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

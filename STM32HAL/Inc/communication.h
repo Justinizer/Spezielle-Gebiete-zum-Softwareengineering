@@ -1,6 +1,8 @@
 #ifndef _COMMUNICATION_H_
 #define _COMMUNICATION_H_
 
+#define PC_COMMAND_PACKET_SIZE	4
+
 /**
  * Transmits sensor values over UART to the connected PC.
  * Format: <PM2,5>;<PM10>;<Temperature>;<Humidity>
@@ -18,5 +20,7 @@ void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity);
  * @param string: String which should be transmitted.
  */
 void send_string(const char *string);
+
+void receive_command(const char *data);
 
 #endif
