@@ -8,8 +8,8 @@ import javax.persistence.*;
  * Represents a condition for an automation. 
  *
  */
+/* name has explicit and in inverted comma, because condition is a mysql keyword */
 @Entity(name = "\"Condition\"")
-
 public class Condition implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

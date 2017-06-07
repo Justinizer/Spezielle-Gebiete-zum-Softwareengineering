@@ -14,6 +14,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import Interface.HomeBeanRemote;
@@ -23,6 +24,7 @@ import Model.Condition;
 import Model.ConditionType;
 import Model.SensorData;
 import Model.Thing;
+import Model.ThingType;
 
 @SessionScoped
 @Path("gui")
@@ -136,6 +138,22 @@ public class Gui implements Serializable {
 
 		return json.toString();
 	}
+	
+	@Produces("application/json")
+	@GET
+	@Path("thing/actor/{email}/{password}")
+	public String getAllActors(@PathParam("email") String email, @PathParam("password") String password) {
+		bh.checkLogin(email, password);
+		List<Thing> things = bh.getAllThings();
+		JSONArray json = new JSONArray();
+		for(Thing t:things){
+			if(t.getType() == ThingType.Actor){
+				json.put(t.getName());
+			}
+		}
+		
+		return json.toString();
+	}
 
 	/**
 	 * get all sensor data for a specific thing
@@ -147,7 +165,7 @@ public class Gui implements Serializable {
 	@Produces("application/json")
 	@GET
 	@Path("thing/{id}")
-	public String getSensorData(@PathParam("id") int id) {
+	public String getSensorData(@PathParam("id") int id) {	
 		JSONObject json = new JSONObject();
 		for (SensorData s : bh.getAllDataForThing(id)) {
 			JSONObject inner = new JSONObject();
@@ -192,6 +210,9 @@ public class Gui implements Serializable {
 		JSONObject json = helper.listAutomations(autos);
 		return json.toString();
 	}
+	
+	
+	
 
 	/**
 	 * create a new automation
@@ -300,6 +321,8 @@ public class Gui implements Serializable {
 			return helper.getFail().toString();
 		}		
 	}
+	
+	
 	
 	
 	
