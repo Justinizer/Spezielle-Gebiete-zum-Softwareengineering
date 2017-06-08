@@ -384,6 +384,7 @@ static void set_brightness(uint8_t percent) {
 	tim_oc.OCFastMode = TIM_OCFAST_DISABLE;
 
 	HAL_TIM_PWM_ConfigChannel(&htim2, &tim_oc, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 }
 /* USER CODE END 4 */
 
