@@ -1,6 +1,7 @@
 #include <string.h>		// For strerror()
 #include <stdlib.h>
 #include <getopt.h>		// For getopt_long()
+#include <unistd.h>		// For sleep()
 #include <stdio.h>
 #include <errno.h>
 #include "serial.h"
@@ -29,6 +30,7 @@ static const struct option program_options[] = {
 };
 
 static void print_help(const char *progname);
+static int get_data(char *buffer, size_t buffersize);
 static int get_and_print_data();
 static int set_brightness(int brightness);
 
@@ -77,7 +79,20 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (daemonizeFlag) {
-		printf("DaemonizeFlag!\n");
+		printf("Starting as daemon...\n");
+		if (daemonize() == 1) {
+			return 1;
+		}
+
+		char buffer[20];
+
+		while (1) {
+			get_data(buffer, 20);
+
+			// TODO: Do smth. with data
+
+			sleep(300);	// Wait 5 mins
+		}
 	}
 
 	return 0;
@@ -93,10 +108,13 @@ static void print_help(const char *progname) {
 	printf("  -s, --set-brightness <value>\tSet brightness to <value>\n\n");
 }
 
-static int get_and_print_data() {
-	char buffer[20];
+static int get_data(char *buffer, size_t buffersize) {
 	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_GET_DATA, 0x00, COMMAND_PACKET_TAIL};
 	int fd;
+
+	if (!buffer || buffersize == 0) {
+		return 1;
+	}
 
 	fd = serial_open();
 	if (fd == -1) {
@@ -110,8 +128,19 @@ static int get_and_print_data() {
 		return 1;
 	}
 
-	serial_read_string(fd, buffer, 20);
+	serial_read_string(fd, buffer, buffersize);
 	serial_close(fd);
+
+
+	return 0;
+}
+
+static int get_and_print_data() {
+	char buffer[20];
+
+	if (get_data(buffer, 20) == 1) {
+		return 1;
+	}
 
 	if (printDataRawFlag) {
 		printf("%s\n", buffer);
