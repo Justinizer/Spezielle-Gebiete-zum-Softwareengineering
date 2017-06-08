@@ -73,7 +73,7 @@ public class Gui implements Serializable {
 	@POST
 	@Path("/login")
 	@Produces("application/json")
-	public String createUser(@FormParam("email") String email, @FormParam("password") String password){
+	public String createUser(@FormParam("email") String email, @FormParam("password") String password) {
 		System.out.println("got sth");
 		System.out.println(email);
 		System.out.println(email);
@@ -108,9 +108,6 @@ public class Gui implements Serializable {
 		}
 		return json.toString();
 	}
-	
-	
-	
 
 	/**
 	 * lists all things and the current value of each thing
@@ -138,7 +135,7 @@ public class Gui implements Serializable {
 
 		return json.toString();
 	}
-	
+
 	@Produces("application/json")
 	@GET
 	@Path("thing/actor/{email}/{password}")
@@ -146,12 +143,15 @@ public class Gui implements Serializable {
 		bh.checkLogin(email, password);
 		List<Thing> things = bh.getAllThings();
 		JSONArray json = new JSONArray();
-		for(Thing t:things){
-			if(t.getType() == ThingType.Actor){
-				json.put(t.getName());
+		for (Thing t : things) {
+			if (t.getType() == ThingType.Actor) {
+				JSONObject inner = new JSONObject();
+				inner.put("name", t.getName());
+				inner.put("id", t.getId());
+				json.put(inner);
 			}
 		}
-		
+
 		return json.toString();
 	}
 
@@ -165,7 +165,7 @@ public class Gui implements Serializable {
 	@Produces("application/json")
 	@GET
 	@Path("thing/{id}")
-	public String getSensorData(@PathParam("id") int id) {	
+	public String getSensorData(@PathParam("id") int id) {
 		JSONObject json = new JSONObject();
 		for (SensorData s : bh.getAllDataForThing(id)) {
 			JSONObject inner = new JSONObject();
@@ -199,7 +199,37 @@ public class Gui implements Serializable {
 	}
 
 	/**
+	 * enable the lambda function of alexa to change the state of a device
+	 * 
+	 * @param id
+	 *            the id of the thing
+	 * @param value
+	 *            the new value of the thing
+	 * @param username
+	 *            the username
+	 * @param password
+	 *            the password
+	 * 
+	 * @return all the data
+	 */
+	@Produces("application/json")
+	@GET
+	@Path("thing/{id}/{value}/{username}/{password}")
+	public String changeStateForAlexa(@PathParam("id") int id, @PathParam("value") String value,
+			@PathParam("username") String user, @PathParam("password") String password) {
+		JSONObject json = helper.getFail();
+		if (bh.checkLogin(user, password)) {
+			if (bh.publish(id, value)) {
+				json = helper.getSuccess();
+			}
+		}
+		return json.toString();
+
+	}
+
+	/**
 	 * get a list of all automation, with the actions and conditions
+	 * 
 	 * @return
 	 */
 	@Produces("application/json")
@@ -210,13 +240,12 @@ public class Gui implements Serializable {
 		JSONObject json = helper.listAutomations(autos);
 		return json.toString();
 	}
-	
-	
-	
 
 	/**
 	 * create a new automation
-	 * @param autoname the name of the automation
+	 * 
+	 * @param autoname
+	 *            the name of the automation
 	 * @return
 	 */
 	@Produces("application/json")
@@ -229,10 +258,15 @@ public class Gui implements Serializable {
 
 	/**
 	 * add a new condition to an automation
-	 * @param autoid the id of the automation
-	 * @param thingid the id of the thing
-	 * @param type the type of the condition (0-5) -> Seen conditiontype
-	 * @param value the value that must be reached
+	 * 
+	 * @param autoid
+	 *            the id of the automation
+	 * @param thingid
+	 *            the id of the thing
+	 * @param type
+	 *            the type of the condition (0-5) -> Seen conditiontype
+	 * @param value
+	 *            the value that must be reached
 	 * @return
 	 */
 	@Produces("application/json")
@@ -254,10 +288,15 @@ public class Gui implements Serializable {
 
 	/**
 	 * add an action to an automation
-	 * @param actionname name of the action
-	 * @param auto id of the automation
-	 * @param thing id of the thing
-	 * @param value value that should be set, when fireing the action
+	 * 
+	 * @param actionname
+	 *            name of the action
+	 * @param auto
+	 *            id of the automation
+	 * @param thing
+	 *            id of the thing
+	 * @param value
+	 *            value that should be set, when fireing the action
 	 * @return
 	 */
 	@Produces("application/json")
@@ -275,11 +314,12 @@ public class Gui implements Serializable {
 
 		return helper.getSuccess().toString();
 	}
-	
-	
+
 	/**
 	 * delete an action
-	 * @param actionid  the id of the action
+	 * 
+	 * @param actionid
+	 *            the id of the action
 	 * @return success = done
 	 */
 	@Produces("application/json")
@@ -289,11 +329,12 @@ public class Gui implements Serializable {
 		bh.deleteAction(actionid);
 		return helper.getSuccess().toString();
 	}
-	
-	
+
 	/**
 	 * delete an condition
-	 * @param conditionid  the id of the action
+	 * 
+	 * @param conditionid
+	 *            the id of the action
 	 * @return success = done
 	 */
 	@Produces("application/json")
@@ -303,30 +344,28 @@ public class Gui implements Serializable {
 		bh.deleteCondition(conditionid);
 		return helper.getSuccess().toString();
 	}
-	
+
 	/**
 	 * update a given automation
-	 * @param autoid the id of the automation
-	 * @param name   the new name. if name == null or name.length <1, name will be ignored and the old one is kept
+	 * 
+	 * @param autoid
+	 *            the id of the automation
+	 * @param name
+	 *            the new name. if name == null or name.length <1, name will be
+	 *            ignored and the old one is kept
 	 * @param active
 	 * @return
 	 */
 	@Produces("application/json")
 	@POST
 	@Path("automation")
-	public String updateAutomation(@FormParam("automationid") int autoid,@FormParam("name") String name,@FormParam("active") boolean active) {
-		if(bh.updateAutomation(autoid, name, active)){
-			return helper.getSuccess().toString();			
-		}else {
+	public String updateAutomation(@FormParam("automationid") int autoid, @FormParam("name") String name,
+			@FormParam("active") boolean active) {
+		if (bh.updateAutomation(autoid, name, active)) {
+			return helper.getSuccess().toString();
+		} else {
 			return helper.getFail().toString();
-		}		
+		}
 	}
-	
-	
-	
-	
-	
-	
-	
 
 }

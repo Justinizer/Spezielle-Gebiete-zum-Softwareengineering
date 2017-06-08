@@ -1,8 +1,8 @@
 import urllib
 import json
 
-
-myactors = urllib.urlopen("https://d0c2baeb.ngrok.io/SHP-Web/rest/gui/thing/actor/a/a").read()
+#"https://d0c2baeb.ngrok.io/SHP-Web/rest/gui/thing/actor/a/a").read()
+myactors = urllib.urlopen("http://127.0.0.1:8080/SHP-Web/rest/gui/thing/actor/a/a").read()	
 actors = json.loads(myactors)
 number = 4
 
@@ -21,9 +21,9 @@ for actor in actors:
 	payload["discoveredAppliances"].append(		{		
 				"applianceId":"device003",
 				"manufacturerName":"yourManufacturerName",
-				"modelName":"model 0 " + str(number),
+				"modelName":str(actor["id"]),
 				"version":"your software version number here.",
-				"friendlyName":actor,
+				"friendlyName":str(actor["name"]),
 				"friendlyDescription":"Virtual Device for the Sample Hello World Skill",
 				"isReachable":True,
 				"actions":[

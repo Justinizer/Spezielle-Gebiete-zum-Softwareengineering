@@ -1,6 +1,8 @@
 import urllib
 import json
 
+ngrok = "https://39455ae6.ngrok.io"
+
 def lambda_handler(event, context):
     access_token = event['payload']['accessToken']
 
@@ -11,6 +13,7 @@ def lambda_handler(event, context):
         return handleControl(context, event)
 
 def handleDiscovery(context, event):
+    global ngrok
     #mydata = urllib.urlopen("https://d0c2baeb.ngrok.io/SHP-Web/alexa.html").read()
     payload = ''
     header = {
@@ -20,7 +23,7 @@ def handleDiscovery(context, event):
         }
 
     if event['header']['name'] == 'DiscoverAppliancesRequest':
-    	myactors = urllib.urlopen("https://d0c2baeb.ngrok.io/SHP-Web/rest/gui/thing/actor/a/a").read()
+    	myactors = urllib.urlopen(ngrok + "/SHP-Web/rest/gui/thing/actor/a/a").read()
     	actors = json.loads(myactors)
     	number = 9
     	payload = {
@@ -30,11 +33,11 @@ def handleDiscovery(context, event):
     	for actor in actors:
     		number = (int(str(number))) + 1
     		payload["discoveredAppliances"].append(		{		
-    					"applianceId":"device00" + str(number),
+    					"applianceId":str(actor["id"]),
     					"manufacturerName":"yourManufacturerName",
-    					"modelName":"model 0" + str(number),
+    					"modelName":str(actor["id"]),
     					"version":"your software version number here.",
-    					"friendlyName":actor,
+    					"friendlyName":str(actor["name"]),
     					"friendlyDescription":"Mein Super Cooles Lambda Geraet",
     					"isReachable":True,
     					"actions":[
@@ -52,19 +55,34 @@ def handleDiscovery(context, event):
     return { 'header': header, 'payload': payload }
 
 def handleControl(context, event):
+    global ngrok
     payload = ''
     device_id = event['payload']['appliance']['applianceId']
     message_id = event['header']['messageId']
+    
 
     if event['header']['name'] == 'TurnOnRequest':
-        
+        urllib.urlopen(ngrok + "/SHP-Web/rest/gui/thing/" + str(device_id) + "/1/a/a"  ).read()
         payload = { }
+        header = {
+            "namespace":"Alexa.ConnectedHome.Control",
+            "name":"TurnOnConfirmation",
+            "payloadVersion":"2",
+            "messageId": message_id
+            }
+    
+    if event['header']['name'] == 'TurnOffRequest':
+        urllib.urlopen(ngrok + "/SHP-Web/rest/gui/thing/" + str(device_id) + "/0/a/a"  ).read()
+        payload = {}
+        header = {
+            "namespace":"Alexa.ConnectedHome.Control",
+            "name":"TurnOffConfirmation",
+            "payloadVersion":"2",
+            "messageId": message_id
+            }
+         
+        
 
-    header = {
-        "namespace":"Alexa.ConnectedHome.Control",
-        "name":"TurnOnConfirmation",
-        "payloadVersion":"2",
-        "messageId": message_id
-        }
+    
     return { 'header': header, 'payload': payload }
 
