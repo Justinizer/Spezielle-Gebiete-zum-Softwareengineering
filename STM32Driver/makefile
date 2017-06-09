@@ -11,7 +11,7 @@ TARGET = main
 SRCDIR = src
 OBJDIR = obj
 DOCDIR = doc
-LIBDIR =
+LIBDIR = 
 INCDIR =
 
 # Programme:
@@ -37,7 +37,7 @@ SRC_CPP	=
 SRC_C	= main.c serial.c daemonize.c
 
 # Bibliotheken:
-LIBS	=
+LIBS	= -lpaho-mqtt3c
 
 # Dateiendungen:
 CPP_EXT 	= cpp
@@ -65,7 +65,7 @@ endif
 
 # Weitere lib-Verzeichnisse spezifizieren, wenn vorhanden
 ifneq ($(LIBDIR),)
-LFLAGS += $(LIBDIR)/
+LFLAGS += -L$(LIBDIR)/
 LDEBUG += $(LIBDIR)/
 endif
 
