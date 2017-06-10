@@ -13,6 +13,9 @@
 #define COMMAND_GET_DATA		0x01
 #define COMMAND_SET_BRIGHTNESS	0x02
 
+static const char *VALUE_NAMES[] = {"PM2_5", "PM10", "temperature", "humidity"};
+static const char *BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
+static const char *CLIENT_ID = "stm32driver";
 
 int daemonizeFlag = 0;
 int getDataFlag = 0;
@@ -20,6 +23,8 @@ int printDataRawFlag = 0;
 int setBrightnessFlag = 0;
 int setBrightness = 0;
 int publishFlag = 0;
+
+MQTTClient client;
 
 static const struct option program_options[] = {
 //	name				has_arg				flag	val
@@ -36,8 +41,10 @@ static void print_help(const char *progname);
 static int get_data(char *buffer, size_t buffersize);
 static int get_and_print_data(int publish);
 static int set_brightness(int brightness);
-static int send_data(const char *data);
-static void parse_data_string(const char *data, float *pm2_5, float *pm10, float *temperature, float *humidity);
+static int open_mqtt_connection(MQTTClient *client);
+static int close_mqtt_connection(MQTTClient *client);
+static int send_values(MQTTClient *client, const char *data);
+static int send_value(MQTTClient *client, const char *name, float value);
 
 int main(int argc, char *argv[]) {
 	int optionIndex;
@@ -169,7 +176,9 @@ static int get_and_print_data(int publish) {
 	}
 
 	if (publish) {
-		send_data(buffer);
+		open_mqtt_connection(&client);
+		send_values(&client, buffer);
+		close_mqtt_connection(&client);
 	}
 
 	return 0;
@@ -202,81 +211,106 @@ static int set_brightness(int brightness) {
 	return 0;
 }
 
-static int send_data(const char *data) {
-	MQTTClient client;
+static int open_mqtt_connection(MQTTClient *client) {
 	MQTTClient_connectOptions opt = MQTTClient_connectOptions_initializer;
+	int result;
+
+	if (!client) {
+		return 1;
+	}
+
+	MQTTClient_create(client, BROKER_ADDRESS, CLIENT_ID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+	opt.keepAliveInterval = 20;
+	opt.cleansession = 1;
+
+	result = MQTTClient_connect(*client, &opt);
+	if (result != MQTTCLIENT_SUCCESS) {
+		printf("Error connecting to broker! Result: %d\n", result);
+		return 1;
+	}
+
+
+	return 0;
+}
+
+static int close_mqtt_connection(MQTTClient *client) {
+	if (!client) {
+		return 1;
+	}
+
+	MQTTClient_disconnect(*client, 10000);
+	MQTTClient_destroy(client);
+
+	return 0;
+}
+
+static int send_values(MQTTClient *client, const char *data) {
+	size_t valueStringLen;
+	char *valueStringBuffer;
+	char *currentValuePtr;
+	size_t index = 0;
+	float value;
+
+	if (!client || !data) {
+		return 1;
+	}
+
+
+	valueStringLen = strlen(data);
+	valueStringBuffer = malloc(valueStringLen + 1);
+	if (!valueStringBuffer) {
+		return 1;
+	}
+
+	strcpy(valueStringBuffer, data);
+
+
+	currentValuePtr = strtok(valueStringBuffer, ";");
+	while (currentValuePtr) {
+
+		sscanf(currentValuePtr, "%f", &value);
+		value /= 10.0f;
+
+		send_value(client, VALUE_NAMES[index], value);
+
+		currentValuePtr = strtok(NULL, ";");
+		index++;
+	}
+
+
+	free(valueStringBuffer);
+
+	return 0;
+}
+
+static int send_value(MQTTClient *client, const char *topic, float value) {
 	MQTTClient_message msg = MQTTClient_message_initializer;
 	MQTTClient_deliveryToken token;
 	char valueBuffer[10];
 	int result;
 
-	const char *BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
-	const char *CLIENT_ID = "stm32driver";
-	const char *TEMPERATURE_TOPIC = "temperature";
-	const char *HUMIDITY_TOPIC = "humidity";
-	const char *PM2_5_TOPIC = "pm2_5";
-	const char *PM10_TOPIC = "pm10";
-
-	MQTTClient_create(&client, BROKER_ADDRESS, CLIENT_ID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
-	opt.keepAliveInterval = 20;
-	opt.cleansession = 1;
-
-	result = MQTTClient_connect(client, &opt);
-	if (result != MQTTCLIENT_SUCCESS) {
-		printf("Error connection to broker! Result: %d\n", result);
+	if (!client || !topic) {
 		return 1;
 	}
 
 	msg.qos = 1;
 	msg.retained = 0;
 
-	float pm2_5, pm10;
-	float temperature;
-	float humidity;
-
-
-	parse_data_string(data, &pm2_5, &pm10, &temperature, &humidity);
-
-
-	snprintf(valueBuffer, 10, "%.1f", pm2_5);
+	snprintf(valueBuffer, 10, "%.1f", value);
 	msg.payload = valueBuffer;
 	msg.payloadlen = strlen(valueBuffer);
-	MQTTClient_publishMessage(client, PM2_5_TOPIC, &msg, &token);
 
-	snprintf(valueBuffer, 10, "%.1f", pm10);
-	msg.payload = valueBuffer;
-	msg.payloadlen = strlen(valueBuffer);
-	MQTTClient_publishMessage(client, PM10_TOPIC, &msg, &token);
-
-	snprintf(valueBuffer, 10, "%.1f", temperature);
-	msg.payload = valueBuffer;
-	msg.payloadlen = strlen(valueBuffer);
-	MQTTClient_publishMessage(client, TEMPERATURE_TOPIC, &msg, &token);
-
-	snprintf(valueBuffer, 10, "%.1f", humidity);
-	msg.payload = valueBuffer;
-	msg.payloadlen = strlen(valueBuffer);
-	MQTTClient_publishMessage(client, HUMIDITY_TOPIC, &msg, &token);
-
-
-	result = MQTTClient_waitForCompletion(client, token, 10000);
-	printf("Message was delivered. Token: %d\n", token);
-
-	MQTTClient_disconnect(client, 10000);
-	MQTTClient_destroy(&client);
-
-	return 0;
-}
-
-static void parse_data_string(const char *data, float *pm2_5, float *pm10, float *temperature, float *humidity) {
-	if (!data || !pm2_5 || !pm10 || !temperature || !humidity) {
-		return;
+	result = MQTTClient_publishMessage(*client, topic, &msg, &token);
+	if (result != MQTTCLIENT_SUCCESS) {
+		printf("Error publishing message. Result: %d\n", result);
+		return 1;
 	}
 
-	sscanf(data, "%f;%f;%f;%f", pm2_5, pm10, temperature, humidity);
+	result = MQTTClient_waitForCompletion(*client, token, 10000);
+	if (result != MQTTCLIENT_SUCCESS) {
+		printf("Error delivering message. Result: %d\n", result);
+		return 1;
+	}
 
-	*pm2_5 = (*pm2_5) / 10.0f;
-	*pm10 = (*pm10) / 10.0f;
-	*temperature = (*temperature) / 10.0f;
-	*humidity = (*humidity) / 10.0f;
+	return 0;
 }
