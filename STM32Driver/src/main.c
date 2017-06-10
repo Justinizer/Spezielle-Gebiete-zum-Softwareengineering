@@ -1,4 +1,5 @@
-#include <string.h>		// For strerror()
+#define _GNU_SOURCE	1	// Include gnu c extensions to use strdup()
+#include <string.h>		// For strerror(), strdup()
 #include <stdlib.h>
 #include <getopt.h>		// For getopt_long()
 #include <unistd.h>		// For sleep()
@@ -14,7 +15,7 @@
 #define COMMAND_SET_BRIGHTNESS	0x02
 
 static const char *VALUE_NAMES[] = {"PM2_5", "PM10", "temperature", "humidity"};
-static const char *BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
+static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
 static const char *CLIENT_ID = "stm32driver";
 
 int daemonizeFlag = 0;
@@ -25,9 +26,11 @@ int setBrightness = 0;
 int publishFlag = 0;
 
 MQTTClient client;
+char *broker_address = NULL;
 
 static const struct option program_options[] = {
 //	name				has_arg				flag	val
+	{"broker-address",	required_argument,	NULL,	'b'},
 	{"daemonize",		no_argument, 		NULL,	'd'},
 	{"get-data", 		no_argument, 		NULL,	'g'},
 	{"help",			no_argument, 		NULL,	'h'},
@@ -41,7 +44,7 @@ static void print_help(const char *progname);
 static int get_data(char *buffer, size_t buffersize);
 static int get_and_print_data(int publish);
 static int set_brightness(int brightness);
-static int open_mqtt_connection(MQTTClient *client);
+static int open_mqtt_connection(MQTTClient *client, const char *broker_address);
 static int close_mqtt_connection(MQTTClient *client);
 static int send_values(MQTTClient *client, const char *data);
 static int send_value(MQTTClient *client, const char *name, float value);
@@ -55,9 +58,13 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-	while ((c = getopt_long(argc, argv, "dghprs:", program_options, &optionIndex)) != -1) {
+	while ((c = getopt_long(argc, argv, "b:dghprs:", program_options, &optionIndex)) != -1) {
 
 		switch (c) {
+			case 'b':
+				broker_address = strdup(optarg);
+				break;
+
 			case 'd':
 				daemonizeFlag = 1;
 				break;
@@ -86,6 +93,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	if (!broker_address) {
+		broker_address = (char *)DEFAULT_BROKER_ADDRESS;
+	}
+
+
+
 	if (getDataFlag || publishFlag) {
 		return get_and_print_data(publishFlag);
 	}
@@ -111,18 +124,26 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+
+
+
+	if (broker_address != DEFAULT_BROKER_ADDRESS) {
+		free(broker_address);
+	}
+
 	return 0;
 }
 
 static void print_help(const char *progname) {
 	printf("Usage: %s [options]...\n\n", progname);
 	printf("Available options:\n");
-	printf("  -d, --daemonize\t\tStart program as a deamon\n");
-	printf("  -g, --get-data\t\tGet and print data from all sensors then quit\n");
-	printf("  -h, --help\t\t\tShow this help\n");
-	printf("  -p, --publish\t\t\tGet, print and publish data then quit\n");
-	printf("  -r, --raw\t\t\tPrint data raw\n");
-	printf("  -s, --set-brightness <value>\tSet brightness to <value>\n\n");
+	printf("  -b, --broker-address <address>  Set address of MQTT broker to <address>\n");
+	printf("  -d, --daemonize                 Start program as a deamon\n");
+	printf("  -g, --get-data                  Get and print data from all sensors then quit\n");
+	printf("  -h, --help                      Show this help\n");
+	printf("  -p, --publish                   Get, print and publish data then quit\n");
+	printf("  -r, --raw                       Print data raw\n");
+	printf("  -s, --set-brightness <value>    Set brightness to <value>\n\n");
 }
 
 static int get_data(char *buffer, size_t buffersize) {
@@ -162,7 +183,7 @@ static int get_and_print_data(int publish) {
 	if (printDataRawFlag) {
 		printf("%s\n", buffer);
 
-	} else {
+	} /*else {
 		float pm2_5, pm10;
 		float temperature;
 		float humidity;
@@ -173,10 +194,10 @@ static int get_and_print_data(int publish) {
 		printf("PM 10µm :    %4.1f µg/m³\n", pm10);
 		printf("Temperature: %4.1f °C\n", temperature);
 		printf("Humidity:    %4.1f %%rF\n", humidity);
-	}
+	}*/
 
 	if (publish) {
-		open_mqtt_connection(&client);
+		open_mqtt_connection(&client, broker_address);
 		send_values(&client, buffer);
 		close_mqtt_connection(&client);
 	}
@@ -211,7 +232,7 @@ static int set_brightness(int brightness) {
 	return 0;
 }
 
-static int open_mqtt_connection(MQTTClient *client) {
+static int open_mqtt_connection(MQTTClient *client, const char *broker_address) {
 	MQTTClient_connectOptions opt = MQTTClient_connectOptions_initializer;
 	int result;
 
@@ -219,7 +240,12 @@ static int open_mqtt_connection(MQTTClient *client) {
 		return 1;
 	}
 
-	MQTTClient_create(client, BROKER_ADDRESS, CLIENT_ID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+	if (!broker_address) {
+		broker_address = DEFAULT_BROKER_ADDRESS;
+	}
+
+
+	MQTTClient_create(client, broker_address, CLIENT_ID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
 	opt.keepAliveInterval = 20;
 	opt.cleansession = 1;
 
