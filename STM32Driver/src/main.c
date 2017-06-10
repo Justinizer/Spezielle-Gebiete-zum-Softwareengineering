@@ -16,6 +16,7 @@
 #define COMMAND_SET_BRIGHTNESS	0x02
 
 static const char *VALUE_NAMES[] = {"PM2_5", "PM10", "temperature", "humidity"};
+static const int VALUE_NAMES_LEN = sizeof(VALUE_NAMES) / sizeof(VALUE_NAMES[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
 static const char *CLIENT_ID = "stm32driver";
 
@@ -253,7 +254,7 @@ static int send_values(MQTTClient *client, const char *data) {
 
 
 	currentValuePtr = strtok(valueStringBuffer, ";");
-	while (currentValuePtr) {
+	while (currentValuePtr && index < VALUE_NAMES_LEN) {
 
 		sscanf(currentValuePtr, "%f", &value);
 		value /= 10.0f;
