@@ -2,6 +2,9 @@ package rest;
 
 import java.util.List;
 
+import javax.json.JsonArray;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import Model.Action;
@@ -45,14 +48,15 @@ public class GuiHelper {
 		return fail;
 	}
 	
-	public JSONObject listAutomations(List<Automation>autos){
-		JSONObject json = new JSONObject();
+	public JSONArray listAutomations(List<Automation>autos){
+		JSONArray json = new JSONArray();
 		for (Automation auto : autos) {
 
-			JSONObject inner = new JSONObject();
-			inner.put("name", auto.getName());
-			inner.put("id", auto.getId());
-			inner.put("active", auto.isActive());
+			JSONObject jsonAuto = new JSONObject();
+			jsonAuto.put("name", auto.getName());
+			jsonAuto.put("id", auto.getId());
+			jsonAuto.put("active", auto.isActive());
+			JSONArray conditions = new JSONArray();
 			for (Condition c : auto.getConditions()) {
 				JSONObject condition = new JSONObject();
 				condition.put("id", c.getId());
@@ -60,10 +64,11 @@ public class GuiHelper {
 				condition.put("type", c.getType());
 				condition.put("thing", c.getThing().getId());
 				condition.put("device name", c.getThing().getName());
-				//inner.put("" +c.getId(), condition);
-				inner.append("condition", condition);
+				conditions.put(condition);
 			}
-			
+			jsonAuto.put("conditions", conditions);
+
+			JSONArray actions = new JSONArray();
 			for (Action a : auto.getActions()) {
 				JSONObject action = new JSONObject();
 				action.put("id", a.getId());
@@ -71,10 +76,10 @@ public class GuiHelper {
 				action.put("name", a.getName());
 				action.put("thing", a.getThing().getId());
 				action.put("device name", a.getThing().getName());
-				//inner.put("" + a.getId(), action);
-				inner.append("action", action);
+				actions.put(action);
 			}
-			json.append("automation", inner);
+			jsonAuto.put("actions", actions);
+			json.put( jsonAuto);
 		}
 		return json;
 	}

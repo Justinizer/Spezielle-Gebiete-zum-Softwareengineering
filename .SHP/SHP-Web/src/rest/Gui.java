@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.json.JsonArray;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -119,7 +120,7 @@ public class Gui implements Serializable {
 	@Path("thing")
 	public String getThings() {
 		List<Thing> things = bh.getAllThings();
-		JSONObject json = new JSONObject();
+		JSONArray json = new JSONArray();
 		if (things == null) {
 			return helper.getFail().toString();
 		}
@@ -130,7 +131,7 @@ public class Gui implements Serializable {
 			inner.put("name", t.getName());
 			inner.put("mqtttopic", t.getMqttTopic());
 			inner.put("currentValue", helper.getCurrentValue(t));
-			json.append("thing", inner);
+			json.put(inner);
 		}
 
 		return json.toString();
@@ -166,13 +167,13 @@ public class Gui implements Serializable {
 	@GET
 	@Path("thing/{id}")
 	public String getSensorData(@PathParam("id") int id) {
-		JSONObject json = new JSONObject();
+		JSONArray json = new JSONArray();
 		for (SensorData s : bh.getAllDataForThing(id)) {
 			JSONObject inner = new JSONObject();
 			inner.put("time", s.getTime());
 			inner.put("value", s.getValue());
 			inner.put("id", s.getId());
-			json.append("data", inner);
+			json.put(inner);
 		}
 		return json.toString();
 	}
@@ -237,7 +238,7 @@ public class Gui implements Serializable {
 	@Path("automation")
 	public String getAutomations() {
 		List<Automation> autos = bh.getAllAutomations();
-		JSONObject json = helper.listAutomations(autos);
+		JSONArray json = helper.listAutomations(autos);
 		return json.toString();
 	}
 
