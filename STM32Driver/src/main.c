@@ -8,6 +8,7 @@
 #include "serial.h"
 #include "daemonize.h"
 #include <MQTTClient.h>
+#include "mqtt.h"
 
 #define COMMAND_PACKET_HEADER	0xAA
 #define COMMAND_PACKET_TAIL		0xFF
@@ -44,10 +45,7 @@ static void print_help(const char *progname);
 static int get_data(char *buffer, size_t buffersize);
 static int get_and_print_data(int publish);
 static int set_brightness(int brightness);
-static int open_mqtt_connection(MQTTClient *client, const char *broker_address);
-static int close_mqtt_connection(MQTTClient *client);
 static int send_values(MQTTClient *client, const char *data);
-static int send_value(MQTTClient *client, const char *name, float value);
 
 int main(int argc, char *argv[]) {
 	int optionIndex;
@@ -201,7 +199,7 @@ static int get_and_print_data(int publish) {
 	}*/
 
 	if (publish) {
-		open_mqtt_connection(&client, broker_address);
+		open_mqtt_connection(&client, broker_address, CLIENT_ID);
 		send_values(&client, buffer);
 		close_mqtt_connection(&client);
 	}
@@ -236,44 +234,6 @@ static int set_brightness(int brightness) {
 	return 0;
 }
 
-static int open_mqtt_connection(MQTTClient *client, const char *broker_address) {
-	MQTTClient_connectOptions opt = MQTTClient_connectOptions_initializer;
-	int result;
-
-	if (!client) {
-		return 1;
-	}
-
-	if (!broker_address) {
-		broker_address = DEFAULT_BROKER_ADDRESS;
-	}
-
-
-	MQTTClient_create(client, broker_address, CLIENT_ID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
-	opt.keepAliveInterval = 20;
-	opt.cleansession = 1;
-
-	result = MQTTClient_connect(*client, &opt);
-	if (result != MQTTCLIENT_SUCCESS) {
-		printf("Error connecting to broker! Result: %d\n", result);
-		return 1;
-	}
-
-
-	return 0;
-}
-
-static int close_mqtt_connection(MQTTClient *client) {
-	if (!client) {
-		return 1;
-	}
-
-	MQTTClient_disconnect(*client, 10000);
-	MQTTClient_destroy(client);
-
-	return 0;
-}
-
 static int send_values(MQTTClient *client, const char *data) {
 	char *valueStringBuffer;
 	char *currentValuePtr;
@@ -298,7 +258,7 @@ static int send_values(MQTTClient *client, const char *data) {
 		sscanf(currentValuePtr, "%f", &value);
 		value /= 10.0f;
 
-		send_value(client, VALUE_NAMES[index], value);
+		mqtt_send_value(client, VALUE_NAMES[index], value);
 
 		currentValuePtr = strtok(NULL, ";");
 		index++;
@@ -310,34 +270,3 @@ static int send_values(MQTTClient *client, const char *data) {
 	return 0;
 }
 
-static int send_value(MQTTClient *client, const char *topic, float value) {
-	MQTTClient_message msg = MQTTClient_message_initializer;
-	MQTTClient_deliveryToken token;
-	char valueBuffer[10];
-	int result;
-
-	if (!client || !topic) {
-		return 1;
-	}
-
-	msg.qos = 1;
-	msg.retained = 0;
-
-	snprintf(valueBuffer, 10, "%.1f", value);
-	msg.payload = valueBuffer;
-	msg.payloadlen = strlen(valueBuffer);
-
-	result = MQTTClient_publishMessage(*client, topic, &msg, &token);
-	if (result != MQTTCLIENT_SUCCESS) {
-		printf("Error publishing message. Result: %d\n", result);
-		return 1;
-	}
-
-	result = MQTTClient_waitForCompletion(*client, token, 10000);
-	if (result != MQTTCLIENT_SUCCESS) {
-		printf("Error delivering message. Result: %d\n", result);
-		return 1;
-	}
-
-	return 0;
-}

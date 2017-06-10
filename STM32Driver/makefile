@@ -34,7 +34,7 @@ LDEBUG	= -Wl,--gc-sections -Wl,--as-needed
 
 # Quelltextdateien:
 SRC_CPP	=
-SRC_C	= main.c serial.c daemonize.c
+SRC_C	= main.c serial.c daemonize.c mqtt.c
 
 # Bibliotheken:
 LIBS	= -lpaho-mqtt3c
