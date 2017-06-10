@@ -11,6 +11,9 @@
 #include <fcntl.h>		// For open()
 #include <stdio.h>		// For strerror()
 
+#include "mqtt.h"
+extern MQTTClient client;
+
 const char *lockfilepath = "/run/lock/stm32driver.lock";
 
 int lockfile;
@@ -118,6 +121,8 @@ void quit_daemon(void) {
 	int result;
 
 	syslog(LOG_INFO, "Exiting...");
+
+	close_mqtt_connection(&client);
 
 	// Remove file lock from lock file
 	result = flock(lockfile, LOCK_UN);

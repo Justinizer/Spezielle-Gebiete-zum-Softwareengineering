@@ -3,22 +3,19 @@
 #include <stdlib.h>
 #include <getopt.h>		// For getopt_long()
 #include <unistd.h>		// For sleep()
+#include <syslog.h>
 #include <stdio.h>
 #include <errno.h>
 #include "serial.h"
 #include "daemonize.h"
-#include <MQTTClient.h>
+#include "commands.h"
 #include "mqtt.h"
-
-#define COMMAND_PACKET_HEADER	0xAA
-#define COMMAND_PACKET_TAIL		0xFF
-#define COMMAND_GET_DATA		0x01
-#define COMMAND_SET_BRIGHTNESS	0x02
 
 static const char *VALUE_NAMES[] = {"PM2_5", "PM10", "temperature", "humidity"};
 static const int VALUE_NAMES_LEN = sizeof(VALUE_NAMES) / sizeof(VALUE_NAMES[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
 static const char *CLIENT_ID = "stm32driver";
+const char *BRIGHTNESS_TOPIC = "brightness";
 
 int daemonizeFlag = 0;
 int getDataFlag = 0;
@@ -43,13 +40,12 @@ static const struct option program_options[] = {
 };
 
 static void print_help(const char *progname);
-static int get_data(char *buffer, size_t buffersize);
 static int get_and_print_data(int publish);
-static int set_brightness(int brightness);
 static int send_values(MQTTClient *client, const char *data);
 
 int main(int argc, char *argv[]) {
 	int optionIndex;
+	int result;
 	int c;
 
 	if (argc == 1) {
@@ -117,16 +113,31 @@ int main(int argc, char *argv[]) {
 		}
 
 		char buffer[20];
+		result = open_mqtt_connection(&client, broker_address, CLIENT_ID);
+		if (result == 1) {
+			syslog(LOG_ERR, "Error connecting to broker. Shutting down.");
+			exit(1);
+
+		} else {
+			syslog(LOG_INFO, "Successfully connected to broker (%s)", broker_address);
+		}
+
+		result = MQTTClient_subscribe(client, BRIGHTNESS_TOPIC, 1);
+		if (result != MQTTCLIENT_SUCCESS) {
+			syslog(LOG_ERR, "Error subscribing to topic '%s'", BRIGHTNESS_TOPIC);
+			exit(1);
+		}
+
 
 		while (1) {
 			get_data(buffer, 20);
+			send_values(&client, buffer);
 
 			// TODO: Do smth. with data
 
 			sleep(300);	// Wait 5 mins
 		}
 	}
-
 
 
 
@@ -147,33 +158,6 @@ static void print_help(const char *progname) {
 	printf("  -p, --publish                   Get, print and publish data then quit\n");
 	printf("  -r, --raw                       Print data raw\n");
 	printf("  -s, --set-brightness <value>    Set brightness to <value>\n\n");
-}
-
-static int get_data(char *buffer, size_t buffersize) {
-	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_GET_DATA, 0x00, COMMAND_PACKET_TAIL};
-	int fd;
-
-	if (!buffer || buffersize == 0) {
-		return 1;
-	}
-
-	fd = serial_open();
-	if (fd == -1) {
-		printf("Error opening the serial connection: %s\n", strerror(errno));
-		return 1;
-	}
-
-	if (serial_write_buffer(fd, packet, 4) < 0) {
-		printf("Error sending data: %s\n", strerror(errno));
-		serial_close(fd);
-		return 1;
-	}
-
-	serial_read_string(fd, buffer, buffersize);
-	serial_close(fd);
-
-
-	return 0;
 }
 
 static int get_and_print_data(int publish) {
@@ -204,33 +188,6 @@ static int get_and_print_data(int publish) {
 		send_values(&client, buffer);
 		close_mqtt_connection(&client);
 	}
-
-	return 0;
-}
-
-static int set_brightness(int brightness) {
-	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_SET_BRIGHTNESS, 0x00, COMMAND_PACKET_TAIL};
-	int fd;
-
-	if (brightness < 0) {
-		brightness = 0;
-	}
-
-	packet[2] = (brightness & 0xFF);
-
-	fd = serial_open();
-	if (fd == -1) {
-		printf("Error opening the serial connection: %s\n", strerror(errno));
-		return 1;
-	}
-
-	if (serial_write_buffer(fd, packet, 4) < 0) {
-		printf("Error sending data: %s\n", strerror(errno));
-		serial_close(fd);
-		return 1;
-	}
-
-	serial_close(fd);
 
 	return 0;
 }
