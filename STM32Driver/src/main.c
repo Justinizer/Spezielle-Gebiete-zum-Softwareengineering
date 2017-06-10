@@ -63,6 +63,10 @@ int main(int argc, char *argv[]) {
 		switch (c) {
 			case 'b':
 				broker_address = strdup(optarg);
+				if (!broker_address) {
+					printf("Error duplicating broker address: %s\n", strerror(errno));
+					return 1;
+				}
 				break;
 
 			case 'd':
@@ -271,7 +275,6 @@ static int close_mqtt_connection(MQTTClient *client) {
 }
 
 static int send_values(MQTTClient *client, const char *data) {
-	size_t valueStringLen;
 	char *valueStringBuffer;
 	char *currentValuePtr;
 	size_t index = 0;
@@ -282,13 +285,11 @@ static int send_values(MQTTClient *client, const char *data) {
 	}
 
 
-	valueStringLen = strlen(data);
-	valueStringBuffer = malloc(valueStringLen + 1);
+	valueStringBuffer = strdup(data);
 	if (!valueStringBuffer) {
+		printf("Error duplicating data string: %s\n", strerror(errno));
 		return 1;
 	}
-
-	strcpy(valueStringBuffer, data);
 
 
 	currentValuePtr = strtok(valueStringBuffer, ";");
