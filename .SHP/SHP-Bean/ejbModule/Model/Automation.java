@@ -22,10 +22,10 @@ public class Automation implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	
-	@OneToMany(mappedBy = "auto", fetch=FetchType.EAGER)
+	@OneToMany(mappedBy = "auto", fetch=FetchType.LAZY)
 	private List<Condition> conditions;
 	
-	@OneToMany(mappedBy = "auto", fetch=FetchType.EAGER)
+	@OneToMany(mappedBy = "auto", fetch=FetchType.LAZY)
 	private List<Action> actions;
 	
 	private boolean active;

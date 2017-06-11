@@ -37,7 +37,8 @@ public class Thing implements Serializable {
 	private String name;
 	private String mqttTopic;
 	
-	@OneToMany(mappedBy = "thing", fetch=FetchType.EAGER)
+	
+	@OneToMany(mappedBy = "thing", fetch=FetchType.LAZY)
 	private List<SensorData> data;
 	
 
@@ -81,6 +82,7 @@ public class Thing implements Serializable {
 		if(this.data == null){
 			return null;
 		}
+		
 		if(this.data.size() == 0){
 			return null;
 		}

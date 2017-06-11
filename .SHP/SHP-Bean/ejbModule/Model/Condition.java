@@ -21,11 +21,11 @@ public class Condition implements Serializable {
 	@Enumerated(EnumType.STRING)
 	private ConditionType type;
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "Auto_ID")
 	private Automation auto;
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "Thing_ID")
 	private Thing thing;
 

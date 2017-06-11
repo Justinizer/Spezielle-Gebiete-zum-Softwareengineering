@@ -19,11 +19,11 @@ public class Action implements Serializable {
 	private String name;
 	private String value;
 	
-	@ManyToOne(fetch=FetchType.EAGER)
+	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="Thing_ID")
 	private Thing thing;
 	
-	@ManyToOne(fetch=FetchType.EAGER)
+	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="Auto_ID")
 	private Automation auto;
 	
