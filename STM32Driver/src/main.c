@@ -11,11 +11,11 @@
 #include "commands.h"
 #include "mqtt.h"
 
-static const char *VALUE_NAMES[] = {"PM2_5", "PM10", "temperature", "humidity"};
+static const char *VALUE_NAMES[] = {"/garten/pm2_5", "/garten/pm10", "/wohnzimmer/temperatur", "/wohnzimmer/feuchtigkeit"};
 static const int VALUE_NAMES_LEN = sizeof(VALUE_NAMES) / sizeof(VALUE_NAMES[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
 static const char *CLIENT_ID = "stm32driver";
-const char *BRIGHTNESS_TOPIC = "brightness";
+const char *BRIGHTNESS_TOPIC = "/wohnzimmer/led/rot";
 
 int daemonizeFlag = 0;
 int getDataFlag = 0;
@@ -132,6 +132,7 @@ int main(int argc, char *argv[]) {
 		while (1) {
 			get_data(buffer, 20);
 			send_values(&client, buffer);
+			syslog(LOG_INFO, "Publishing data.");
 
 			// TODO: Do smth. with data
 
