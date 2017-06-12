@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+	<persistence-unit name="SHPBean">
+	  <jta-data-source>java:/MySqlDS</jta-data-source>
+	  <class>Model.SensorData</class>
+	  <class>Model.Thing</class>
+	  <class>Model.User</class>
+	  <class>Model.SystemConfig</class>
+	  <class>Model.Automation</class>
+	  <class>Model.Action</class>
+	  <class>Model.Condition</class>
+	    <properties>
+  			<property name="hibernate.hbm2ddl.auto" value="update"/>
+  			<property name="hibernate.enable_lazy_load_no_trans" value="true" />
+  		</properties>
+	</persistence-unit>
+</persistence>

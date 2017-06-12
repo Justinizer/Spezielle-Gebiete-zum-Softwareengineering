@@ -1,0 +1,461 @@
+{
+	"variables": [],
+	"info": {
+		"name": "shp",
+		"_postman_id": "25dad689-1acd-c4f4-303c-afd151f775c1",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "login",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/login/a/a",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "login post",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/login",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "a",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "a",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get all automations",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/automation",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "tolleemail@anbieter.de",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "supermegageheimespw",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "update automation 6",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/automation",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "automationid",
+							"value": "6",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "Schalte aus UPDATE",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "active",
+							"value": "false",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "create user",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/login",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "asdasdasdsad@deasdasdasd.de",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "sdasdasdasdaa",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get sensordata",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/thing/1",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "a",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "a",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get all things",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/thing",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "a",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "a",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "manual switching",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/thing",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "a",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "password",
+							"value": "a",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "id",
+							"value": "3",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "value",
+							"value": "1",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "create condition",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/automation/condition",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "autoid",
+							"value": "6",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "thingid",
+							"value": "2",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "type",
+							"value": "1",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "value",
+							"value": "12345",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "delete condition",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/automation/condition/7",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "autoid",
+							"value": "6",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "thingid",
+							"value": "2",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "type",
+							"value": "1",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "value",
+							"value": "12345",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "create action",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/automation/action",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "soll wieder geloescht werden",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "autoid",
+							"value": "6",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "thing",
+							"value": "3",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "value",
+							"value": "12345",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "delete action",
+			"request": {
+				"url": "http://127.0.0.1:8080/SHP-Web/rest/gui/automation/action/7",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "soll wieder geloescht werden",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "autoid",
+							"value": "6",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "thing",
+							"value": "3",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "value",
+							"value": "12345",
+							"description": "",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
