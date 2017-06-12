@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.json.JsonObject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -373,6 +374,27 @@ public class Gui implements Serializable {
 		} else {
 			return helper.getFail().toString();
 		}
+	}
+	
+	/**
+	 * get all conditions types with descriptions 
+	 * @return
+	 */
+	@Produces("application/json")
+	@GET
+	@Path("automation/conditionTypes")
+	public String getConditionTypes(){
+		ConditionType[] cons= ConditionType.getAll();
+		JSONArray ob = new JSONArray();
+		for(ConditionType c:cons){
+			JSONObject inner = new JSONObject();
+			inner.put("id", ConditionType.getAsInt(c));
+			inner.put("info", ConditionType.getAsText(c));
+			ob.put(inner);
+		}
+		
+		return ob.toString();
+		
 	}
 
 }
