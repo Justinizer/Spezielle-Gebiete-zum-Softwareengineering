@@ -36,6 +36,7 @@ public class Thing implements Serializable {
 	private Integer id;
 	private String name;
 	private String mqttTopic;
+	private String unit; 
 	
 	
 	@OneToMany(mappedBy = "thing", fetch=FetchType.LAZY)
@@ -99,6 +100,12 @@ public class Thing implements Serializable {
    
 	public ThingType getType(){
 		return type;
+	}
+	public String getUnit() {
+		return unit;
+	}
+	public void setUnit(String unit) {
+		this.unit = unit;
 	}
 	
 	

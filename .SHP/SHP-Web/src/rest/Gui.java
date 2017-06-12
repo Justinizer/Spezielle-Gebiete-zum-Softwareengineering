@@ -131,6 +131,7 @@ public class Gui implements Serializable {
 			inner.put("id", t.getId());
 			inner.put("type", t.getType());
 			inner.put("name", t.getName());
+			inner.put("unit", t.getUnit());
 			inner.put("mqtttopic", t.getMqttTopic());
 			inner.put("currentValue", helper.getCurrentValue(t));
 			json.put(inner);
