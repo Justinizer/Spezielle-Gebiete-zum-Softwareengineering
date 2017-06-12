@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.json.JsonArray;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -61,13 +60,16 @@ public class Gui implements Serializable {
 	@GET
 	@Path("login/{email}/{password}")
 	public String login(@PathParam("email") String email, @PathParam("password") String password) {
-		JSONObject json;
+		JSONObject json= helper.getFail();
+		try{
 		if (bh.checkLogin(email, password)) {
 			json = helper.getSuccess();
 		} else {
 			json = helper.getFail();
 		}
-
+		}catch(Exception e){
+			
+		}
 		return json.toString();
 	}
 
@@ -145,7 +147,7 @@ public class Gui implements Serializable {
 		List<Thing> things = bh.getAllThings();
 		JSONArray json = new JSONArray();
 		for (Thing t : things) {
-			if (t.getType() == ThingType.Actor) {
+			if (t.getType() == ThingType.AnalogActor || t.getType() == ThingType.DigitalActor) {
 				JSONObject inner = new JSONObject();
 				inner.put("name", t.getName());
 				inner.put("id", t.getId());
@@ -189,12 +191,15 @@ public class Gui implements Serializable {
 	@POST
 	@Path("thing")
 	public String changeState(@FormParam("id") int id, @FormParam("value") String value) {
-		JSONObject json;
+		JSONObject json = helper.getFail();
+		try {
+			if (bh.publish(id, value)) {
+				json = helper.getSuccess();
+			} else {
+				json = helper.getFail();
+			}
+		} catch (Exception e) {
 
-		if (bh.publish(id, value)) {
-			json = helper.getSuccess();
-		} else {
-			json = helper.getFail();
 		}
 		return json.toString();
 	}

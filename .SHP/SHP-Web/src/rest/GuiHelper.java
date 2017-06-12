@@ -2,8 +2,6 @@ package rest;
 
 import java.util.List;
 
-import javax.json.JsonArray;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
