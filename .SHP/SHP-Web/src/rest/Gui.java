@@ -17,6 +17,7 @@ import javax.ws.rs.Produces;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import Bean.Weather;
 import Interface.HomeBeanRemote;
 import Model.Action;
 import Model.Automation;
@@ -399,5 +400,19 @@ bh.test();
 		return ob.toString();
 		
 	}
+	
+	@Produces("application/json")
+	@GET
+	@Path("weather")
+	public String getWeather(){
+		Weather wr = bh.getWeather();
+		JSONObject json = new JSONObject();
+		json.put("name", wr.getWeatherName());
+		json.put("img", wr.getWeather());
+		return json.toString();
+		
+		
+	}
+	
 
 }

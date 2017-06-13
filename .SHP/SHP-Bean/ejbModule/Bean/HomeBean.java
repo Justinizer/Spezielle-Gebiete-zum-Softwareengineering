@@ -9,6 +9,7 @@ import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
 import Model.Action;
@@ -354,6 +355,9 @@ public class HomeBean implements HomeBeanRemote {
 
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#updateAutomation(int, java.lang.String, boolean)
+	 */
 	@Override
 	public boolean updateAutomation(int autoid, String name, boolean active) {
 		if (!isLoggedin) {
@@ -376,6 +380,15 @@ public class HomeBean implements HomeBeanRemote {
 		mb.reloadAutomations();
 
 		return true;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getWeather()
+	 */
+	@Override
+	public Weather getWeather(){
+		return new Weather(52.2959618,8.9040964);
 	}
 
 
