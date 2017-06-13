@@ -31,6 +31,7 @@
 	<script>
 	var backendip = "192.168.1.1:8080/SHP-Web"
 	var baseUrl ="http://" + backendip + "/rest/gui";
+	var conditions;
 	
 	function onMessage(event){
 		// hier muss natuerlich mehr passieren ;)
@@ -77,6 +78,8 @@
 			var actors = $("<select></select>");
 
 			$.getJSON(baseUrl + "/automation/conditionTypes", function (data2) {
+					conditions = data2;
+					console.log(data2);
 
 					$.each(data2, function (i, item) {
 						combo.append('<option value="' + item.id + '">' + item.info + "</option>");
@@ -94,7 +97,7 @@
 								var unit = (item.unit === undefined) ? "" : item.unit;
 
 								$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + item.currentValue.value + ' ' + unit + '</td></tr>');
-								$('#configurationTable tr:last').after('<tr><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td></tr>');
+								$('#configurationTable tr:last').after('<tr id="sensor' + item.id + '"><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td></tr>');
 								break;
 								
 							case "DigitalActor":
@@ -113,7 +116,27 @@
 								break;
 						}
 					});
+
+					getAutomationsAndLinkWithTable();
 			});
+		});
+	}
+
+	function getAutomationsAndLinkWithTable() {
+		$.getJSON(baseUrl + "/automation", function(data) {
+			console.log(data);
+
+			$.each(data, function(i, item) {
+				var sensorId = item.conditions[0].thing;
+
+				$('#sensor' + sensorId + 'td:nth-child(2) select').val(getConditionIdFromName(item.conditions[0].thing));
+			});
+		});
+	}
+
+	function getConditionIdFromName(name) {
+		jQuery.grep(conditions, function(item) {
+			return item.info === name;
 		});
 	}
 
