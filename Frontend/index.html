@@ -3,7 +3,7 @@
 	<meta charset="UTF-8">
 	<title>SHP</title>
 	<script src="js/jquery.js"></script>
-	<style>
+	<!-- <style>
 	td {
 		text-align: center; 
 		vertical-align: middle;
@@ -25,7 +25,63 @@
 	#content {
 		display: none;
 	}
-	</style>
+	</style> -->
+	<style>
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+    text-align: center; 
+	vertical-align: middle;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+tr:hover{background-color:#edf7ee}
+
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 7px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+}
+.button:hover {
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+	#content {
+		display: none;
+	}
+	
+	#sensorTable { 
+		float: left;
+		border: 1px solid black;
+		margin-right: 10px;
+		width: 15%;
+	}
+	#actorTable {
+		float: left;
+		border: 1px solid black;
+		width: 49%;
+	}
+	#configurationTable {
+		border: 1px solid black;
+	}
+</style>
 </head>
 <body>
 	<script>
@@ -148,10 +204,10 @@
 					value = 1;
 					buttonText = "Einschalten";
 				}
-				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
+				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="button" class="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
 				break;
 			case "AnalogActor":
-				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="analog' + item.id + '" value="' + item.currentValue.value + '"><input type="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
+				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="analog' + item.id + '" value="' + item.currentValue.value + '"><input type="button"  class="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
 				break;
 		}
 		});
@@ -178,7 +234,7 @@
 			<input type="text" id="email" name="email"/><br>
 			Passwort:<br>
 			<input type="password" id="password" name="password"/><br>
-			<input type="submit" value="Anmelden">
+			<input type="submit"  class="button" value="Anmelden">
 		</form>
 	</div>
 
@@ -193,7 +249,6 @@
 		<table id="actorTable">
 			<tr><th>Aktor</th><th>Wert</th><th>Aktion</th></tr>
 		</table>
-	</div>
 	</div>
 
 </body>
