@@ -1,34 +1,31 @@
 <html>
 <head>
-<title>SHP</title>
-<script src="js/jquery.js"></script>
-<style>
-td {
-	text-align: center;
-	vertical-align: middle;
-}
-
-#sensorTable {
-	float: left;
-	border: 1px solid black;
-	margin-right: 10px;
-	width: 49%;
-}
-
-#actorTable {
-	float: left;
-	border: 1px solid black;
-	width: 49%;
-}
-
-#configurationTable {
-	border: 1px solid black;
-}
-
-#content {
-	display: none;
-}
-</style>
+	<meta charset="UTF-8">
+	<title>SHP</title>
+	<script src="js/jquery.js"></script>
+	<style>
+	td {
+		text-align: center; 
+		vertical-align: middle;
+	}
+	#sensorTable { 
+		float: left;
+		border: 1px solid black;
+		margin-right: 10px;
+		width: 49%;
+	}
+	#actorTable {
+		float: left;
+		border: 1px solid black;
+		width: 49%;
+	}
+	#configurationTable {
+		border: 1px solid black;
+	}
+	#content {
+		display: none;
+	}
+	</style>
 </head>
 <body>
 	<script>
@@ -99,10 +96,28 @@ td {
 			}
 		});
 	}
-	function removeTableRows() {
-		$("#actorTable > tbody > tr").slice(1).remove();
-		$("#sensorTable > tbody > tr").slice(1).remove();
+
+
+
+	function getAutomationsAndLinkWithTable() {
+		$.getJSON(baseUrl + "/automation", function(data) {
+			console.log(data);
+
+			$.each(data, function(i, item) {
+				var sensorId = item.conditions[0].thing;
+
+				$('#sensor' + sensorId + 'td:nth-child(2) select').val(getConditionIdFromName(item.conditions[0].thing));
+			});
+		});
 	}
+
+	function getConditionIdFromName(name) {
+		jQuery.grep(conditions, function(item) {
+			return item.info === name;
+		});
+	}
+
+	
 	function fillTables() {
 		var combo = $("<select></select>");
 		var actors = $("<select></select>");
@@ -121,7 +136,8 @@ td {
 
 			switch(item.type) {
 			case "Sensor":
-				$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value + '</p></td></tr>');
+				var unit = (item.unit === undefined) ? "" : item.unit;
+				$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value + ' ' + unit + '</p></td></tr>');
 				$('#configurationTable tr:last').after('<tr><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td></tr>');
 				break;
 				
@@ -139,6 +155,8 @@ td {
 				break;
 		}
 		});
+
+		getAutomationsAndLinkWithTable();
 	}
 	function submit() {
 		var email = $('#email').val();
@@ -156,36 +174,26 @@ td {
 
 	<div id="loginForm">
 		<form action="javascript:submit()">
-			Benutzername:<br> <input type="text" id="email" name="email" /><br>
-			Passwort:<br> <input type="password" id="password"
-				name="password" /><br> <input type="submit" value="Anmelden">
+			Benutzername:<br>
+			<input type="text" id="email" name="email"/><br>
+			Passwort:<br>
+			<input type="password" id="password" name="password"/><br>
+			<input type="submit" value="Anmelden">
 		</form>
 	</div>
 
 	<div id="content">
 		<table id="configurationTable">
-			<tr>
-				<th>Sensor</th>
-				<th>Bedingung</th>
-				<th>Wert</th>
-				<th>Aktor</th>
-				<th>Aktion</th>
-				<th>Aktiviert</th>
-			</tr>
+			<tr><th>Sensor</th><th>Bedingung</th><th>Wert</th><th>Aktor</th><th>Aktion</th><th>Aktiviert</th></tr>
 		</table>
+		<br>
 		<table id="sensorTable">
-			<tr>
-				<th>Sensor</th>
-				<th>Wert</th>
-			</tr>
+			<tr><th>Sensor</th><th>Wert</th></tr>
 		</table>
 		<table id="actorTable">
-			<tr>
-				<th>Aktor</th>
-				<th>Wert</th>
-				<th>Aktion</th>
-			</tr>
+			<tr><th>Aktor</th><th>Wert</th><th>Aktion</th></tr>
 		</table>
+	</div>
 	</div>
 
 </body>
