@@ -19,7 +19,7 @@ import Bean.MqttBean;
 import Interface.MqttBeanRemote;
 
 @ServerEndpoint("/websocket")
-public class WebSocket implements Serializable {
+public class WebSocket implements Serializable { 
 	
 	public static final Set<Session> clientSessions = Collections.synchronizedSet(new HashSet<Session>());
 
@@ -42,7 +42,6 @@ public class WebSocket implements Serializable {
 		System.out.println("NEW WS!");
 		clientSessions.add(aClientSession);
 		MqttBean.clientSessions.add(aClientSession);
-		//bh.testi();
 	}
 	
 	/**
