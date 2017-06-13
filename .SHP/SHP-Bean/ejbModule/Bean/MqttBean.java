@@ -210,6 +210,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				// TODO remove WS!
 			}
 		}
 	}

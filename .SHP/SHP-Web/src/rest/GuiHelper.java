@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
+import Model.ConditionType;
 import Model.SensorData;
 import Model.Thing;
 
@@ -59,7 +60,7 @@ public class GuiHelper {
 				JSONObject condition = new JSONObject();
 				condition.put("id", c.getId());
 				condition.put("value", c.getValue());
-				condition.put("type", c.getType());
+				condition.put("type", ConditionType.getAsInt(c.getType()));
 				condition.put("thing", c.getThing().getId());
 				condition.put("device name", c.getThing().getName());
 				conditions.put(condition);
