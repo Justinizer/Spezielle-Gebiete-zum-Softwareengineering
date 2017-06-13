@@ -1,55 +1,88 @@
 <html>
 <head>
-	<title>SHP</title>
-	<script src="js/jquery.js"></script>
-	<style>
-	td {
-		text-align: center; 
-		vertical-align: middle;
-	}
-	#sensorTable { 
-		float: left;
-		border: 1px solid black;
-		margin-right: 10px;
-		width: 49%;
-	}
-	#actorTable {
-		float: left;
-		border: 1px solid black;
-		width: 49%;
-	}
-	#configurationTable {
-		border: 1px solid black;
-	}
-	#content {
-		display: none;
-	}
-	</style>
+<title>SHP</title>
+<script src="js/jquery.js"></script>
+<style>
+td {
+	text-align: center;
+	vertical-align: middle;
+}
+
+#sensorTable {
+	float: left;
+	border: 1px solid black;
+	margin-right: 10px;
+	width: 49%;
+}
+
+#actorTable {
+	float: left;
+	border: 1px solid black;
+	width: 49%;
+}
+
+#configurationTable {
+	border: 1px solid black;
+}
+
+#content {
+	display: none;
+}
+</style>
 </head>
 <body>
 	<script>
-	var backendip = "192.168.1.1:8080/SHP-Web"
+	var backendip = "127.0.0.1:8080/SHP-Web"
 	var baseUrl ="http://" + backendip + "/rest/gui";
+	var jsonThings;
+	var conditionTypes;
 	
 	function onMessage(event){
-		alert(event.data);
+		//alert(event.data);
+		var jdata = JSON.parse(event.data);
+		//alert("id = " + 'thing' + jdata.id  +  " value= " + jdata.value);
+		document.getElementById('thing' + jdata.id).innerHTML  = jdata.value;
+
+		//todo: abfangen wenn kein aktor!
+		if(jdata.type.endsWith("Actor")) {
+			if(jdata.value == '1'){
+				document.getElementById('btn' + jdata.id).value  = "Ausschalten";
+				document.getElementById('btn' + jdata.id).setAttribute( "onClick", "javascript: digitalAction(" + jdata.id + ", 0);" );
+			} else {
+				document.getElementById('btn' + jdata.id).value  = "Einschalten";	
+				document.getElementById('btn' + jdata.id).setAttribute( "onClick", "javascript: digitalAction(" + jdata.id + ", 1);" );
+			}
+		}
+		
+		
+		
 	}
 	
 	function connectWS(){
 		ws = new WebSocket("ws://" + backendip + "/websocket");	
 		ws.onmessage = onMessage;
-		//ws.onopen = onOpen;
-		//ws.onclose = 
-		//ws.onerror =
 	}
+
+	function getThings(){
+		$.getJSON(baseUrl + "/thing", function(thingsData) {
+			jsonThings = thingsData;	
+			$.getJSON(baseUrl + "/automation/conditionTypes", function(typeData) {
+				conditionTypes = typeData;
+				fillTables();
+			});		
+			
+		});
+	}
+
+	
 	
 	function digitalAction(id, action) {
 		$.post(baseUrl + "/thing", {id:id, value:action}, function(data) {
 			if (data.status === "successful") {
-				setTimeout(function() {
+				/* setTimeout(function() {
 					removeTableRows();
-					loadDataAndFillTables();
-				}, 100);
+					getThings();
+				}, 100); */
 			}
 		});
 	}
@@ -57,10 +90,10 @@
 		var value = document.getElementById(id).value;//$('#'+id).val();
 		$.post(baseUrl + "/thing", {id:id, value:value}, function(data) {
 			if (data.status === "successful") {
-				setTimeout(function() {
-					removeTableRows();
-					loadDataAndFillTables();
-				}, 100);
+				/* setTimeout(function() {
+					//removeTableRows();
+					//getThings();
+				}, 100); */
 			}
 		});
 	}
@@ -68,42 +101,41 @@
 		$("#actorTable > tbody > tr").slice(1).remove();
 		$("#sensorTable > tbody > tr").slice(1).remove();
 	}
-	function loadDataAndFillTables() {
-		$.getJSON(baseUrl + "/thing", function(data) {
-			//var actorComboBox = "<select></select>";
-			var combo = $("<select></select>");
-			var actors = $("<select></select>");
-			$.getJSON(baseUrl + "/automation/conditionTypes", function (data2) {
-					$.each(data2, function (i, item) {
-						combo.append('<option value="' + item.id + '">' + item.info + "</option>");
-					});
-					$.each(data, function(i, item) {
-						if (item.type.endsWith("Actor")) {
-							actors.append('<option value="' + item.id + '">' + item.name + '</option>');
-						}
-					});
-					$.each(data, function(i, item) {
-						switch(item.type) {
-							case "Sensor":
-								$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + item.currentValue.value + '</td></tr>');
-								$('#configurationTable tr:last').after('<tr><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td></tr>');
-								break;
-								
-							case "DigitalActor":
-								var buttonText = "Ausschalten";
-								var value = 0;
-								if (item.currentValue.value == 0) {
-									value = 1;
-									buttonText = "Einschalten";
-								}
-								$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + item.currentValue.value + '</td><td><input type="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')"></td></tr>');
-								break;
-							case "AnalogActor":
-								$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + item.currentValue.value + '</td><td><input type="range" min="0" max="100" id="' + item.id + '" value="' + item.currentValue.value + '"><input type="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
-								break;
-						}
-					});
-			});
+	function fillTables() {
+		var combo = $("<select></select>");
+		var actors = $("<select></select>");
+
+		$.each(conditionTypes, function (i, item) {
+			combo.append('<option value="' + item.id + '">' + item.info + "</option>");
+		});
+		
+		$.each(jsonThings, function(i, item) {
+			if (item.type.endsWith("Actor")) {
+				actors.append('<option value="' + item.id + '">' + item.name + '</option>');
+			}
+		});
+		
+		$.each(jsonThings, function(i, item) {
+
+			switch(item.type) {
+			case "Sensor":
+				$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value + '</p></td></tr>');
+				$('#configurationTable tr:last').after('<tr><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td></tr>');
+				break;
+				
+			case "DigitalActor":
+				var buttonText = "Ausschalten";
+				var value = 0;
+				if (item.currentValue.value == 0) {
+					value = 1;
+					buttonText = "Einschalten";
+				}
+				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
+				break;
+			case "AnalogActor":
+				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="' + item.id + '" value="' + item.currentValue.value + '"><input type="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
+				break;
+		}
 		});
 	}
 	function submit() {
@@ -113,7 +145,7 @@
 			if (data.status === "successful") {
 				$('#loginForm').hide();
 				$('#content').show();
-				loadDataAndFillTables();
+				getThings();
 				connectWS();
 			}
 		});
@@ -122,23 +154,35 @@
 
 	<div id="loginForm">
 		<form action="javascript:submit()">
-			Benutzername:<br>
-			<input type="text" id="email" name="email"/><br>
-			Passwort:<br>
-			<input type="password" id="password" name="password"/><br>
-			<input type="submit" value="Anmelden">
+			Benutzername:<br> <input type="text" id="email" name="email" /><br>
+			Passwort:<br> <input type="password" id="password"
+				name="password" /><br> <input type="submit" value="Anmelden">
 		</form>
 	</div>
 
 	<div id="content">
 		<table id="configurationTable">
-			<tr><th>Sensor</th><th>Bedingung</th><th>Wert</th><th>Aktor</th><th>Aktion</th><th>Aktiviert</th></tr>
+			<tr>
+				<th>Sensor</th>
+				<th>Bedingung</th>
+				<th>Wert</th>
+				<th>Aktor</th>
+				<th>Aktion</th>
+				<th>Aktiviert</th>
+			</tr>
 		</table>
 		<table id="sensorTable">
-			<tr><th>Sensor</th><th>Wert</th></tr>
+			<tr>
+				<th>Sensor</th>
+				<th>Wert</th>
+			</tr>
 		</table>
 		<table id="actorTable">
-			<tr><th>Aktor</th><th>Wert</th><th>Aktion</th></tr>
+			<tr>
+				<th>Aktor</th>
+				<th>Wert</th>
+				<th>Aktion</th>
+			</tr>
 		</table>
 	</div>
 

@@ -174,6 +174,11 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		 * persist nicht :(
 		 */
 
+		
+
+		handleWSSessions(databaseThing, data);
+		
+		
 		List<Automation> affectedAutos = autos.get(topic);
 		if (affectedAutos == null) {
 			return;
@@ -194,15 +199,19 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			}
 		}
 
+
+	}
+	
+	
+	private void handleWSSessions(Thing databaseThing, SensorData data){
 		for (Session s : clientSessions){
 			try {
-				s.getBasicRemote().sendText("{\"id\":" + databaseThing.getId() + ", \"value\": \"" + data.getValue() + "\"}");
+				s.getBasicRemote().sendText("{\"id\":" + databaseThing.getId() + ", \"value\": \"" + data.getValue() + "\", \"type\":\"" + databaseThing.getType() + "\"}");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-
 	}
 
 	/**
