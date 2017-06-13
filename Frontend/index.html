@@ -28,8 +28,19 @@
 </head>
 <body>
 	<script>
-	var baseUrl = "http://192.168.1.140:8080/SHP-Web/rest/gui";
-
+	var backendip = "192.168.1.1:8080/SHP-Web"
+	var baseUrl ="http://" + backendip + "/rest/gui";
+	
+	function onMessage(event){
+		// hier muss natuerlich mehr passieren ;)
+		alert(event.data);
+	}
+	
+	function connectWS(){
+		ws = new WebSocket("ws://" + backendip + "/websocket");	
+		ws.onmessage = onMessage;
+	}
+	
 	function digitalAction(id, action) {
 		$.post(baseUrl + "/thing", {id:id, value:action}, function(data) {
 			if (data.status === "successful") {
@@ -40,7 +51,6 @@
 			}
 		});
 	}
-
 	function analogAction(id) {
 		var value = document.getElementById(id).value;//$('#'+id).val();
 		$.post(baseUrl + "/thing", {id:id, value:value}, function(data) {
@@ -52,73 +62,57 @@
 			}
 		});
 	}
-
 	function removeTableRows() {
 		$("#actorTable > tbody > tr").slice(1).remove();
 		$("#sensorTable > tbody > tr").slice(1).remove();
 	}
-
 	function loadDataAndFillTables() {
 		$.getJSON(baseUrl + "/thing", function(data) {
 			//var actorComboBox = "<select></select>";
-
 			var combo = $("<select></select>");
 			var actors = $("<select></select>");
 			$.getJSON(baseUrl + "/automation/conditionTypes", function (data2) {
-
 					$.each(data2, function (i, item) {
 						combo.append('<option value="' + item.id + '">' + item.info + "</option>");
 					});
-
 					$.each(data, function(i, item) {
 						if (item.type.endsWith("Actor")) {
 							actors.append('<option value="' + item.id + '">' + item.name + '</option>');
 						}
 					});
-
 					$.each(data, function(i, item) {
-
 						switch(item.type) {
 							case "Sensor":
 								$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + item.currentValue.value + '</td></tr>');
-
 								$('#configurationTable tr:last').after('<tr><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td></tr>');
-
 								break;
 								
 							case "DigitalActor":
 								var buttonText = "Ausschalten";
 								var value = 0;
-
 								if (item.currentValue.value == 0) {
 									value = 1;
 									buttonText = "Einschalten";
 								}
-
 								$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + item.currentValue.value + '</td><td><input type="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')"></td></tr>');
-
 								break;
-
 							case "AnalogActor":
 								$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + item.currentValue.value + '</td><td><input type="range" min="0" max="100" id="' + item.id + '" value="' + item.currentValue.value + '"><input type="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
 								break;
 						}
 					});
 			});
-
 		});
 	}
-
 	function submit() {
 		var email = $('#email').val();
 		var password = $('#password').val();
-
 		$.getJSON(baseUrl + "/login/" + email + "/" + password, function(data) {
 			if (data.status === "successful") {
 				$('#loginForm').hide();
 				$('#content').show();
-
 				loadDataAndFillTables();
+				connectWS();
 			}
 		});
 	}
