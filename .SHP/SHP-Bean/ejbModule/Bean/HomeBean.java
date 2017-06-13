@@ -27,6 +27,8 @@ import Model.User;
 @Remote(HomeBeanRemote.class)
 public class HomeBean implements HomeBeanRemote {
 
+	
+	
 	@PersistenceContext
 	EntityManager em;
 
@@ -50,6 +52,7 @@ public class HomeBean implements HomeBeanRemote {
 	 */
 	@Override
 	public String test() {
+
 		return "Bean working";
 	}
 
@@ -163,8 +166,9 @@ public class HomeBean implements HomeBeanRemote {
 	public void addData(SensorData s) {
 		em.persist(s);
 		em.flush();
-
 	}
+	
+
 
 	/*
 	 * (non-Javadoc)
@@ -327,7 +331,10 @@ public class HomeBean implements HomeBeanRemote {
 		}
 
 	}
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#deleteCondition(int)
 	 */
 	@Override
@@ -353,21 +360,25 @@ public class HomeBean implements HomeBeanRemote {
 			return false;
 		}
 		Automation auto = em.find(Automation.class, autoid);
-		if(auto == null){
+		if (auto == null) {
 			return false;
 		}
-		
-		if(name != null){
-			if(name.length()> 0){
+
+		if (name != null) {
+			if (name.length() > 0) {
 				auto.setName(name);
 			}
 		}
-		
+
 		auto.setActive(active);
 		em.merge(auto);
 		em.flush();
 		mb.reloadAutomations();
-		
+
 		return true;
 	}
+
+
+
+	
 }

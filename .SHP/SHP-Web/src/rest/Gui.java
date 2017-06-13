@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.json.JsonObject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -38,6 +37,7 @@ public class Gui implements Serializable {
 
 	private GuiHelper helper = new GuiHelper();
 
+
 	/**
 	 * REST Test Method
 	 * 
@@ -47,6 +47,9 @@ public class Gui implements Serializable {
 	@GET
 	public String test() {
 		System.out.println("TESTING!!");
+		//System.out.println(WebSocket.clientSessions.size());
+bh.test();
+		
 		return helper.getSuccess().toString();
 	}
 

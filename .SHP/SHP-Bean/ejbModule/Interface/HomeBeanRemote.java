@@ -3,6 +3,8 @@ package Interface;
 import java.util.List;
 
 import javax.ejb.Remote;
+import javax.websocket.Session;
+import javax.websocket.WebSocketContainer;
 
 import Model.Action;
 import Model.Automation;
@@ -129,6 +131,8 @@ public interface HomeBeanRemote {
 	 * @return
 	 */
 	public boolean updateAutomation(int autoid, String name, boolean active);
+	
+	
 	
 	
 	
