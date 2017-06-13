@@ -44,14 +44,16 @@ td {
 		document.getElementById('thing' + jdata.id).innerHTML  = jdata.value;
 
 		//todo: abfangen wenn kein aktor!
-		if(jdata.type.endsWith("Actor")) {
+		if(jdata.type == "DigitalActor") {
 			if(jdata.value == '1'){
 				document.getElementById('btn' + jdata.id).value  = "Ausschalten";
 				document.getElementById('btn' + jdata.id).setAttribute( "onClick", "javascript: digitalAction(" + jdata.id + ", 0);" );
 			} else {
 				document.getElementById('btn' + jdata.id).value  = "Einschalten";	
 				document.getElementById('btn' + jdata.id).setAttribute( "onClick", "javascript: digitalAction(" + jdata.id + ", 1);" );
-			}
+			}			
+		} else if(jdata.type == "AnalogActor"){
+			document.getElementById('analog' + jdata.id).value  = jdata.value;
 		}
 		
 		
@@ -87,7 +89,7 @@ td {
 		});
 	}
 	function analogAction(id) {
-		var value = document.getElementById(id).value;//$('#'+id).val();
+		var value = document.getElementById("analog"+id).value;//$('#'+id).val();
 		$.post(baseUrl + "/thing", {id:id, value:value}, function(data) {
 			if (data.status === "successful") {
 				/* setTimeout(function() {
@@ -133,7 +135,7 @@ td {
 				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
 				break;
 			case "AnalogActor":
-				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="' + item.id + '" value="' + item.currentValue.value + '"><input type="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
+				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="analog' + item.id + '" value="' + item.currentValue.value + '"><input type="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
 				break;
 		}
 		});
