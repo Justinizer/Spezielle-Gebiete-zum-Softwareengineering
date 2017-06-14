@@ -161,20 +161,18 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		System.out.println(topic + " " + new String(arg1.getPayload()));
 		Thing databaseThing = things.get(topic);
 		SensorData data = new SensorData(new String(arg1.getPayload()), databaseThing);
+		
+		/*
+		 * warum ich den umweg über die hb gehe und nicht einfach
+		 * em.persis(data) mache? weils nicht geht... namedquerrys gehen,
+		 * persist nicht :(
+		 */			
 		try {
 			hb.addData(data);
 		} catch (Exception e) {
 			System.out.println("MQTT BEAN:");
 			e.printStackTrace();
-		}
-
-		/*
-		 * warum ich den umweg über die hb gehe und nicht einfach
-		 * em.persis(data) mache? weils nicht geht... namedquerrys gehen,
-		 * persist nicht :(
-		 */
-
-		
+		}		
 
 		handleWSSessions(databaseThing, data);
 		
@@ -189,9 +187,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			System.out.println("affected: " + a.getName());
 			if (a.fulfilled(data.getValue(), topic)) {
 				/* conditions are fulfilled: FIRE the actions */
-
 				System.out.println(a.getName() + "  firing!");
-				/* fire all actions */
 				for (Action action : a.getActions()) {
 					publish(action.getThing().getMqttTopic(), action.getValue());
 				}
@@ -203,15 +199,24 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	}
 	
 	
+	/**
+	 * update the websockets with the new data
+	 * @param databaseThing the thing
+	 * @param data the new data
+	 */
 	private void handleWSSessions(Thing databaseThing, SensorData data){
+		ArrayList<Session> toDelete = new ArrayList<Session>();
+		
 		for (Session s : clientSessions){
 			try {
 				s.getBasicRemote().sendText("{\"id\":" + databaseThing.getId() + ", \"value\": \"" + data.getValue() + "\", \"type\":\"" + databaseThing.getType() + "\"}");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				// TODO remove WS!
+				toDelete.add(s);
 			}
+		}
+		
+		for(Session s: toDelete){
+			clientSessions.remove(s);
 		}
 	}
 

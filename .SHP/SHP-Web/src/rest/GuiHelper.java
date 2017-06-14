@@ -62,7 +62,7 @@ public class GuiHelper {
 				condition.put("value", c.getValue());
 				condition.put("type", ConditionType.getAsInt(c.getType()));
 				condition.put("thing", c.getThing().getId());
-				condition.put("device name", c.getThing().getName());
+				condition.put("devicename", c.getThing().getName());
 				conditions.put(condition);
 			}
 			jsonAuto.put("conditions", conditions);
@@ -74,7 +74,7 @@ public class GuiHelper {
 				action.put("value", a.getValue());
 				action.put("name", a.getName());
 				action.put("thing", a.getThing().getId());
-				action.put("device name", a.getThing().getName());
+				action.put("devicename", a.getThing().getName());
 				actions.put(action);
 			}
 			jsonAuto.put("actions", actions);
