@@ -69,6 +69,10 @@ public class Condition implements Serializable {
 	public ConditionType getType() {
 		return type;
 	}
+	
+	public Automation getAutomation(){
+		return auto;
+	}
 
 	public Thing getThing() {
 		return thing;

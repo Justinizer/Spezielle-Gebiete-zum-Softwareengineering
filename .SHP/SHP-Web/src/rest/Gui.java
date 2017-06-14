@@ -264,8 +264,12 @@ bh.test();
 	@PUT
 	@Path("automation")
 	public String addAutomations(@FormParam("name") String autoname) {
-		bh.addAutomation(autoname);
-		return helper.getSuccess().toString();
+		Automation a= bh.addAutomation(autoname);
+
+		if(a != null){
+			return helper.getOneAutomation(a).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -293,9 +297,11 @@ bh.test();
 			return helper.getFail().toString();
 		}
 		Condition c = new Condition(a, ct, t, value);
-		bh.addCondition(c);
-
-		return helper.getSuccess().toString();
+		Automation an= bh.addCondition(c);
+		if(an != null){
+			return helper.getOneAutomation(an).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -322,9 +328,12 @@ bh.test();
 			return helper.getFail().toString();
 		}
 		Action action = new Action(actionname, value, t, a);
-		bh.addAction(action);
+		Automation an= bh.addAction(action);
 
-		return helper.getSuccess().toString();
+		if(an != null){
+			return helper.getOneAutomation(an).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -338,8 +347,11 @@ bh.test();
 	@DELETE
 	@Path("automation/action/{actionid}")
 	public String deleteAction(@PathParam("actionid") int actionid) {
-		bh.deleteAction(actionid);
-		return helper.getSuccess().toString();
+		Automation a =bh.deleteAction(actionid);
+		if(a != null){
+			return helper.getOneAutomation(a).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -353,8 +365,11 @@ bh.test();
 	@DELETE
 	@Path("automation/condition/{conditionid}")
 	public String deleteCondtition(@PathParam("conditionid") int conditionid) {
-		bh.deleteCondition(conditionid);
-		return helper.getSuccess().toString();
+		Automation a = bh.deleteCondition(conditionid);
+		if(a != null){
+			return helper.getOneAutomation(a).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -373,8 +388,9 @@ bh.test();
 	@Path("automation")
 	public String updateAutomation(@FormParam("automationid") int autoid, @FormParam("name") String name,
 			@FormParam("active") boolean active) {
-		if (bh.updateAutomation(autoid, name, active)) {
-			return helper.getSuccess().toString();
+		Automation a  =bh.updateAutomation(autoid, name, active);
+		if (a != null) {
+			return helper.getOneAutomation(a).toString();
 		} else {
 			return helper.getFail().toString();
 		}

@@ -255,14 +255,15 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#addAutomation(java.lang.String)
 	 */
 	@Override
-	public void addAutomation(String automationName) {
+	public Automation addAutomation(String automationName) {
 		if (!isLoggedin) {
-			return;
+			return null;
 		}
 		Automation auto = new Automation(automationName);
 		em.persist(auto);
 		em.flush();
 		mb.reloadAutomations();
+		return auto;
 
 	}
 
@@ -272,13 +273,14 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#addCondition(Model.Condition)
 	 */
 	@Override
-	public void addCondition(Condition c) {
+	public Automation addCondition(Condition c) {
 		if (!isLoggedin) {
-			return;
+			return null;
 		}
 		em.persist(c);
 		em.flush();
 		mb.reloadAutomations();
+		return c.getAutomation();
 
 	}
 
@@ -301,14 +303,14 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#addAction(Model.Action)
 	 */
 	@Override
-	public void addAction(Action a) {
+	public Automation addAction(Action a) {
 		if (!isLoggedin) {
-			return;
+			return null;
 		}
 		em.persist(a);
 		em.flush();
 		mb.reloadAutomations();
-
+		return a.getAutomation();
 	}
 
 	/*
@@ -317,18 +319,18 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#deleteAction(int)
 	 */
 	@Override
-	public boolean deleteAction(int actionid) {
+	public Automation deleteAction(int actionid) {
 		if (!isLoggedin) {
-			return false;
+			return null;
 		}
 		Action a = em.find(Action.class, actionid);
 		if (a == null) {
-			return false;
+			return null;
 		} else {
 			em.remove(a);
 			em.flush();
 			mb.reloadAutomations();
-			return true;
+			return em.find(Automation.class, a.getAutomation().getId());
 		}
 
 	}
@@ -339,18 +341,18 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#deleteCondition(int)
 	 */
 	@Override
-	public boolean deleteCondition(int conditionid) {
+	public Automation deleteCondition(int conditionid) {
 		if (!isLoggedin) {
-			return false;
+			return null;
 		}
 		Condition c = em.find(Condition.class, conditionid);
 		if (c == null) {
-			return false;
+			return null;
 		} else {
 			em.remove(c);
 			em.flush();
 			mb.reloadAutomations();
-			return true;
+			return em.find(Automation.class, c.getAutomation().getId());
 		}
 
 	}
@@ -359,13 +361,13 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#updateAutomation(int, java.lang.String, boolean)
 	 */
 	@Override
-	public boolean updateAutomation(int autoid, String name, boolean active) {
+	public Automation updateAutomation(int autoid, String name, boolean active) {
 		if (!isLoggedin) {
-			return false;
+			return null;
 		}
 		Automation auto = em.find(Automation.class, autoid);
 		if (auto == null) {
-			return false;
+			return null;
 		}
 
 		if (name != null) {
@@ -379,7 +381,7 @@ public class HomeBean implements HomeBeanRemote {
 		em.flush();
 		mb.reloadAutomations();
 
-		return true;
+		return em.find(Automation.class,autoid);
 	}
 	
 	

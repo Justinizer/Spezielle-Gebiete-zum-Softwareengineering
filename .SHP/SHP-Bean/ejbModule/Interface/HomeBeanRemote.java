@@ -113,33 +113,33 @@ public interface HomeBeanRemote {
 	 * add a new Automation to the DB
 	 * @param automationName
 	 */
-	public void addAutomation(String automationName);
+	public Automation addAutomation(String automationName);
 	
 	/**
 	 * add a condition to a automation. The automation is set in the condition object
 	 * @param c
 	 */
-	public void addCondition(Condition c);
+	public Automation addCondition(Condition c);
 	
 	/**
 	 * add an action to a automation. The automation is set in the Action object
 	 * @param a
 	 */
-	public void addAction(Action a);
+	public Automation addAction(Action a);
 	
 	/**
 	 * delete an action
 	 * @param actionid
 	 * @return
 	 */
-	public boolean deleteAction(int actionid);
+	public Automation deleteAction(int actionid);
 	
 	/**
 	 * delete a condition
 	 * @param conditionid
 	 * @return
 	 */
-	public boolean deleteCondition(int conditionid);
+	public Automation deleteCondition(int conditionid);
 	
 	/**
 	 * update a given automation
@@ -148,7 +148,7 @@ public interface HomeBeanRemote {
 	 * @param active
 	 * @return
 	 */
-	public boolean updateAutomation(int autoid, String name, boolean active);
+	public Automation updateAutomation(int autoid, String name, boolean active);
 	
 	
 	/**
