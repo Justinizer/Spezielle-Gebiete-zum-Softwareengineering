@@ -65,6 +65,9 @@ th {
 	//var backendip = "127.0.0.1:8080/SHP-Web"
 	var backendip = "192.168.1.1:8080/SHP-Web"
 	var baseUrl ="http://" + backendip + "/rest/gui";
+	var combo = $("<select></select>");
+	var actors = $("<select></select>");
+	var sensors = $("<select></select>");
 	var jsonThings;
 	var conditionTypes;
 	
@@ -95,9 +98,27 @@ th {
 
 	function getThings(){
 		$.getJSON(baseUrl + "/thing", function(thingsData) {
-			jsonThings = thingsData;	
+			jsonThings = thingsData;
+
+			actors = $("<select></select>");
+			sensors = $("<select></select>");
+			$.each(jsonThings, function(i, item) {
+				if (item.type.endsWith("Actor")) {
+					actors.append('<option value="' + item.id + '">' + item.name + '</option>');
+
+				} else {
+					sensors.append('<option value="' + item.id + '">' + item.name + '</option>');
+				}
+			});
+
 			$.getJSON(baseUrl + "/automation/conditionTypes", function(typeData) {
 				conditionTypes = typeData;
+
+				combo = $("<select></select>");
+				$.each(conditionTypes, function (i, item) {
+					combo.append('<option value="' + item.id + '">' + item.info + "</option>");
+				});
+					
 				fillTables();
 			});		
 			
@@ -107,10 +128,7 @@ th {
 	function digitalAction(id, action) {
 		$.post(baseUrl + "/thing", {id:id, value:action}, function(data) {
 			if (data.status === "successful") {
-				/* setTimeout(function() {
-					removeTableRows();
-					getThings();
-				}, 100); */
+
 			}
 		});
 	}
@@ -119,10 +137,7 @@ th {
 		var value = document.getElementById("analog"+id).value;//$('#'+id).val();
 		$.post(baseUrl + "/thing", {id:id, value:value}, function(data) {
 			if (data.status === "successful") {
-				/* setTimeout(function() {
-					//removeTableRows();
-					//getThings();
-				}, 100); */
+
 			}
 		});
 	}
@@ -132,8 +147,11 @@ th {
 			console.log(data);
 
 			$.each(data, function(i, item) {
-				var sensorId = '#sensor' + item.conditions[0].thing;
+				var sensorId = '#automation' + item.conditions[0].thing;
 
+				addConfigurationTableRow(item, sensors, combo, actors);
+
+				selectOption($(sensorId + ' td:nth-child(1) option'), item.conditions[0].thing);
 				selectOption($(sensorId + ' td:nth-child(2) option'), item.conditions[0].type);
 				$(sensorId + ' td:nth-child(3) input').val(item.conditions[0].value).change();
 				selectOption($(sensorId + ' td:nth-child(4) option'), item.actions[0].thing);
@@ -143,53 +161,74 @@ th {
 		});
 	}
 
+	function addConfigurationTableRow(item, sensors, conditions, actors) {
+		var row = '<tr id="automation' + item.id + '">';
+		row += '<td><select>' + sensors.html() + '</select></td>';
+		row += '<td><select>' + conditions.html() + '</select></td><td><input type="text"></td>';
+		row += '<td><select>' + actors.html() + '</select></td><td><input type="text"></td>';
+		row += '<td><input type="checkbox"></td>';
+		row += '<td></td>';
+		row += '<td><input type="button" value="Entfernen" class="button" onclick="removeAutomation(' + item.id + ')"></tr></tr>';
+
+		// Insert row as second last row
+		$('#configurationTable tr:last').prev().after(row);
+	}
+
+	function submitConfigChanges() {
+		$('#configurationTable tr').each(function(i, row) {
+			if ($(row).attr('id')) {
+				// TODO: Save automations
+				console.log(row);
+			}
+		});
+	}
+
+	function removeAutomation(id) {
+		if (id == 0) {
+
+		} else {
+			// TODO: Send remove request to backend
+			$('#automation' + id).remove();
+		}
+	}
+
 	function selectOption(element, value) {
 		element.removeAttr('selected').filter('[value="' + value + '"]').prop('selected', true);
 	}
+
+	function addAutomationRow() {
+		addConfigurationTableRow({id: 0}, sensors, combo, actors);
+	}
 	
 	function fillTables() {
-		var combo = $("<select></select>");
-		var actors = $("<select></select>");
-
-		$.each(conditionTypes, function (i, item) {
-			combo.append('<option value="' + item.id + '">' + item.info + "</option>");
-		});
-		
-		$.each(jsonThings, function(i, item) {
-			if (item.type.endsWith("Actor")) {
-				actors.append('<option value="' + item.id + '">' + item.name + '</option>');
-			}
-		});
-		
 		$.each(jsonThings, function(i, item) {
 
 			switch(item.type) {
 			case "Sensor":
 				var unit = (item.unit === undefined) ? "" : item.unit;
+
 				$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value + ' ' + unit + '</p></td></tr>');
-				$('#configurationTable tr:last').after('<tr id="sensor' + item.id + '"><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td><td><input type="button" value="Übernehmen" class="button" onclick="submitConfigChanges(' + item.id + ')"></td></tr>');
+				//addConfigurationTableRow(item, sensors, combo, actors);
 				break;
 				
 			case "DigitalActor":
 				var buttonText = "Ausschalten";
 				var value = 0;
+
 				if (item.currentValue.value == 0) {
 					value = 1;
 					buttonText = "Einschalten";
 				}
-				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="button" class="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
+
+				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td></td><td><input type="button" class="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
 				break;
 			case "AnalogActor":
-				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="analog' + item.id + '" value="' + item.currentValue.value + '"><input type="button"  class="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
+				$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="analog' + item.id + '" value="' + item.currentValue.value + '"></td><td><input type="button"  class="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
 				break;
 		}
 		});
 
 		getAutomationsAndLinkWithTable();
-	}
-
-	function submitConfigChanges(sensorId) {
-		alert(sensorId);
 	}
 
 	function submit() {
@@ -218,14 +257,15 @@ th {
 
 	<div id="content">
 		<table id="configurationTable">
-			<tr><th>Sensor</th><th>Bedingung</th><th>Wert</th><th>Aktor</th><th>Aktion</th><th>Aktiviert</th><th></th></tr>
+			<tr><th>Sensor</th><th>Bedingung</th><th>Wert</th><th>Aktor</th><th>Aktion</th><th>Aktiviert</th><th></th><th></th></tr>
+			<tr><td colspan="6"></td><td><input type="button" value="Übernehmen" class="button" onclick="submitConfigChanges()"></td><td><input type="button" value="Regel hinzufügen" class="button" onclick="addAutomationRow()"></td></tr>
 		</table>
 		<br>
 		<table id="sensorTable">
 			<tr><th>Sensor</th><th>Wert</th></tr>
 		</table>
 		<table id="actorTable">
-			<tr><th>Aktor</th><th>Wert</th><th>Aktion</th></tr>
+			<tr><th>Aktor</th><th>Wert</th><th colspan="2">Aktion</th></tr>
 		</table>
 	</div>
 
