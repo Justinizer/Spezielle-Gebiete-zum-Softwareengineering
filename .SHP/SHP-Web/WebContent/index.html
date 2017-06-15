@@ -79,6 +79,7 @@ th {
 	var conditionTypes;
 	var combo = $("<select></select>");
 	var actors = $("<select></select>");
+	var sensors =$("<select></select>");
 	var automation;
 	
 	function onMessage(event){
@@ -119,10 +120,7 @@ th {
 	function digitalAction(id, action) {
 		$.post(baseUrl + "/thing", {id:id, value:action}, function(data) {
 			if (data.status === "successful") {
-				/* setTimeout(function() {
-					removeTableRows();
-					getThings();
-				}, 100); */
+				/* yay */
 			}
 		});
 	}
@@ -131,10 +129,7 @@ th {
 		var value = document.getElementById("analog"+id).value;//$('#'+id).val();
 		$.post(baseUrl + "/thing", {id:id, value:value}, function(data) {
 			if (data.status === "successful") {
-				/* setTimeout(function() {
-					//removeTableRows();
-					//getThings();
-				}, 100); */
+				/* yay */
 			}
 		});
 	}
@@ -169,22 +164,25 @@ th {
 	    var selectedid =  y[x].id;
 		$.each(automation, function(ai, auto) {
 			if(("autoid" + auto.id) === selectedid){
-				alert(auto.name);
 				selectedAuto = auto;	
 				
 			}
 		});
 
-		 $("#tbCondition td").remove(); 		
+		$("#tbCondition td").remove(); 		
 		$("#tbAction td").remove(); 
+		
 		$.each(selectedAuto.conditions, function(ci, condi) {
 			var conditionid = condi.id;
 			$('#tbCondition tr:last').after(
-					"<tr><td id='conditionNameTD" + conditionid + "'>" + condi.devicename + "</td>" + 
+					"<tr><td id='conditionNameTD" + conditionid + "'><select id='conditionThing" + conditionid + "'>" + sensors.html() + "</select></td>" + 
 					"<td><select id='select" + conditionid + "'>" + combo.html() + "</select></td>" + 
-					"<td>" + condi.value  + "</td></tr>" );
-			$("#select" + conditionid  + " :nth-child(" +  (condi.type +1) + ")").prop('selected', true);
-			//selectOption( $('select' + conditionid ), condi.type);
+					"<td><input id='condiValue" + conditionid + "' type='text' value='" +condi.value + "'/></td></tr>" );
+
+			$("#select" + conditionid  + " :nth-child(" +  (condi.type +1) + ")").prop('selected', true);				
+			$("#conditionThing" + conditionid + " option[value=" + condi.thing  +"]").prop('selected', true);
+			
+			
 		});
 
 		
@@ -192,8 +190,10 @@ th {
 		$.each(selectedAuto.actions, function(ai, action) {
 			var actionid = action.id;
 			$('#tbAction tr:last').after(
-					"<tr><td id='actionNameTD" + actionid + "'>" + action.devicename + "</td>" + 
-					"<td>" + action.value  + "</td></tr>" );
+					"<tr><td id='actionNameTD" + actionid + "'><select id='actionThing" + actionid + "'>" + actors.html() + "</select></td>" + 
+					"<td><input id='actionValue" + actionid + "' type='text' value='" +action.value + "'/></td></tr>" );
+
+			$("#actionThing" + actionid + " option[value=" + action.thing  +"]").prop('selected', true);
 		});
  
 		
@@ -201,6 +201,9 @@ th {
 		
 	}
 
+	function selectOption(element, value) {
+		element.removeAttr('selected').filter('[value="' + value + '"]').prop('selected', true);
+	}
 	
 
 
@@ -228,6 +231,7 @@ th {
 					var unit = (item.unit === undefined) ? "" : item.unit;
 					$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value + ' ' + unit + '</p></td></tr>');
 					//$('#configurationTable tr:last').after('<tr id="sensor' + item.id + '"><td>' + item.name + '</td><td><select>' + combo.html() + '</select></td><td><input type="text"></td><td><select>' + actors.html() + '</select></td><td><input type="text"></td><td><input type="checkbox"></td><td><input type="button" value="Übernehmen" class="button" onclick="submitConfigChanges(' + item.id + ')"></td></tr>');
+					sensors.append('<option value="' + item.id + '">' + item.name + '</option>');
 					break;
 					
 				case "DigitalActor":
