@@ -384,6 +384,28 @@ public class HomeBean implements HomeBeanRemote {
 		return em.find(Automation.class,autoid);
 	}
 	
+	public boolean deleteAutomation(int autoid){
+		if (!isLoggedin) {
+			return false;
+		}
+		try{
+			Automation auto = em.find(Automation.class, autoid);
+			for(Condition c:auto.getConditions()){
+				em.remove(c);
+			}
+			for(Action a : auto.getActions()){
+				em.remove(a);
+			}
+			em.remove(auto);
+			em.flush();
+			mb.reloadAutomations();
+			return true;
+		}catch(Exception e){
+			
+		}
+		return false;
+	}
+	
 	
 	/* (non-Javadoc)
 	 * @see Interface.HomeBeanRemote#getWeather()

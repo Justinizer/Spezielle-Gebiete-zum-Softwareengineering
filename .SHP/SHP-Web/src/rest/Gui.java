@@ -396,6 +396,17 @@ bh.test();
 		}
 	}
 	
+	@Produces("application/json")
+	@POST
+	@Path("automation/delete")	
+	public String deleteAutomation(@FormParam("automationid") int autoid){
+		if(bh.deleteAutomation(autoid)){
+			return helper.getSuccess().toString();
+		}
+		return helper.getFail().toString();
+		
+	}
+	
 	/**
 	 * get all conditions types with descriptions 
 	 * @return

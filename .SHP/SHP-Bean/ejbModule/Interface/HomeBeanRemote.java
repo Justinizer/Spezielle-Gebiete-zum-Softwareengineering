@@ -151,6 +151,8 @@ public interface HomeBeanRemote {
 	public Automation updateAutomation(int autoid, String name, boolean active);
 	
 	
+	public boolean deleteAutomation(int autoid);
+	
 	/**
 	 * Get the current weather for the configured point 
 	 * @return

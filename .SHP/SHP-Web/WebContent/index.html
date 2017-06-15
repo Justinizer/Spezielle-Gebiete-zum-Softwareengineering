@@ -252,6 +252,25 @@ th {
 		getAutomationsAndLinkWithTable();
 	}
 
+	function deleteAutomation(){
+		alert("del");
+
+		var x = document.getElementById("comboAuto").selectedIndex;
+	    var y = document.getElementById("comboAuto").options;
+		var selectedAuto;
+	    var selectedid =  y[x].id;
+		$.each(automation, function(ai, auto) {
+			if(("autoid" + auto.id) === selectedid){
+				selectedAuto = auto;	
+				selectedid = auto.id;
+			}
+		});
+		alert(selectedid);
+		$.post(baseUrl + "/automation/delete", {automationid:selectedid}, function(data) {
+		});
+		
+	}
+
 	function submitConfigChanges(sensorId) {
 		alert(sensorId);
 	}
@@ -282,6 +301,8 @@ th {
 	<div id="content">
 		<div id="automation">
 			Konfigurierte Automatisierungen: <select id="comboAuto"></select>
+			<input type="button" class="button"
+				value="Löschen" onClick="deleteAutomation()">
 
 			<table id="tbCondition">
 				<tr>
@@ -297,6 +318,7 @@ th {
 					<th>Wert</th>
 				</tr>
 			</table>
+			
 		</div>
 		<br>
 
