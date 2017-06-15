@@ -261,13 +261,12 @@ bh.test();
 	 * @return
 	 */
 	@Produces("application/json")
-	@PUT
-	@Path("automation")
+	@POST
+	@Path("automation/create")
 	public String addAutomations(@FormParam("name") String autoname) {
 		Automation a= bh.addAutomation(autoname);
-
 		if(a != null){
-			return helper.getOneAutomation(a).toString();
+			return helper.getOneAutomation(a).put("status", "successful").toString();
 		}
 		return helper.getFail().toString();
 	}
@@ -286,7 +285,7 @@ bh.test();
 	 * @return
 	 */
 	@Produces("application/json")
-	@PUT
+	@POST
 	@Path("automation/condition")
 	public String addCondition(@FormParam("autoid") int autoid, @FormParam("thingid") int thingid,
 			@FormParam("type") int type, @FormParam("value") String value) {
@@ -318,7 +317,7 @@ bh.test();
 	 * @return
 	 */
 	@Produces("application/json")
-	@PUT
+	@POST
 	@Path("automation/action")
 	public String addAction(@FormParam("name") String actionname, @FormParam("autoid") int auto,
 			@FormParam("thing") int thing, @FormParam("value") String value) {

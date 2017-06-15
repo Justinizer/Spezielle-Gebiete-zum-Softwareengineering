@@ -263,6 +263,7 @@ public class HomeBean implements HomeBeanRemote {
 		em.persist(auto);
 		em.flush();
 		mb.reloadAutomations();
+		System.out.println("bean auto added");
 		return auto;
 
 	}
