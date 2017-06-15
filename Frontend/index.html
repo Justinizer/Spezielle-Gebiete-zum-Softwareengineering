@@ -158,9 +158,9 @@ th {
 
 			$.each(data, function(ai, auto) {			
 				  
-			     $('#comboAuto').append($("<option></option>")
-			                    .attr("id","autoid" + auto.id)
-			                    .text(auto.name)); 	
+				 $('#comboAuto').append($("<option></option>")
+								.attr("id","autoid" + auto.id)
+								.text(auto.name)); 	
 			});
 
 			fillCondtionAndAction();
@@ -197,21 +197,27 @@ th {
 		$('#actionRowId' + rowId).remove();
 	}
 
-	function submitChanges() {
-
-	}
-
 	function fillCondtionAndAction(){
 		var x = document.getElementById("comboAuto").selectedIndex;
-	    var y = document.getElementById("comboAuto").options;
+		var y = document.getElementById("comboAuto").options;
 		var selectedAuto;
-	    var selectedid =  y[x].id;
+		var selectedid =  y[x].id;
 
-		$.each(automation, function(ai, auto) {
-			if(("autoid" + auto.id) === selectedid){
-				selectedAuto = auto;		
+		if (selectedid) {
+			$.each(automation, function(ai, auto) {
+				if(("autoid" + auto.id) === selectedid){
+					selectedAuto = auto;		
+				}
+			});
+
+		} else {
+			for (var i = 0; i < automation.length; i++) {
+				if (automation[i].id === y[x].value) {
+					selectedAuto = automation[i];
+					break;
+				}
 			}
-		});
+		}
 
 		$(".tbConditionRow").remove(); 		
 		$(".tbActionRow").remove(); 
@@ -286,13 +292,43 @@ th {
 		getAutomationsAndLinkWithTable();
 	}
 
+	function getAutomationById(id) {
+		for (var i = 0; i < automation.length; i++) {
+			if (automation[i].id === id) {
+				return automation[i];
+			}
+		}
+	}
+
+	function submitChanges() {
+		var selectedIndex =  document.getElementById('comboAuto').selectedIndex;
+		var options = document.getElementById('comboAuto').options;
+
+		if (options[selectedIndex].value.startsWith("newAuto")) {
+
+			// New automation
+			var automationObj = {actions: [], active: true, conditions: [], name: $('#automationNameField').val()};
+			options[selectedIndex].innerHTML = automationObj.name;
+
+			getAutomationById(options[selectedIndex].value).name = automationObj.name;
+
+			console.log(automation);
+
+		} else {
+
+			// Update existig automation
+		}
+	}
+
 	function addAutomation() {
 		$(".tbConditionRow").remove(); 		
 		$(".tbActionRow").remove(); 
 
-		$('#automationNameField').val("");
+		$('#automationNameField').val("Neue Regel");
 
 		$('#comboAuto').append(new Option("Neue Regel", "newAuto" + newAutomationId, false, true));
+
+		automation.push({actions: [], active: false, conditions: [], id: "newAuto" + newAutomationId, name: "Neue Regel"});
 
 		newAutomationId += 1;
 	}
@@ -300,17 +336,26 @@ th {
 	function deleteAutomation(){
 		alert("del");
 
-		var x = document.getElementById("comboAuto").selectedIndex;
-	    var y = document.getElementById("comboAuto").options;
+		var selectedIndex = document.getElementById('comboAuto').selectedIndex;
+		var options = document.getElementById('comboAuto').options;
 		var selectedAuto;
-	    var selectedid =  y[x].id;
+		var selectedid =  options[selectedIndex].id;
 
-	    if(y[x].value.startsWith("newAuto")) {
+		if(options[selectedIndex].value.startsWith("newAuto")) {
 
-	    	// Selectes automation was not saved -> Remove locally only
-	    	$('#comboAuto option:selected').remove();
+			// Selected automation was not saved -> Remove locally only
+			
+			// Remove object from list
+			for (var i = 0; i < automation.length; i++) {
+				if (automation[i].id === options[selectedIndex].value) {
+					automation.splice(i, 1);
+					break;
+				}
+			}
 
-	    } else {
+			$('#comboAuto option:selected').remove();
+
+		} else {
 
 			$.each(automation, function(ai, auto) {
 				if(("autoid" + auto.id) === selectedid){
