@@ -312,6 +312,34 @@ th {
 
 			getAutomationById(options[selectedIndex].value).name = automationObj.name;
 
+
+			$('.tbConditionRow').each(function(i, row) {
+				var thing = $(row).find('td:nth-child(1) select').val();
+				var type = $(row).find('td:nth-child(2) select').val();
+				var value = $(row).find('td:nth-child(3) input').val();
+
+				var newCond = {devicename: "", thing: thing, type: type, value: value};
+
+
+				automationObj.conditions.push(newCond);
+			});
+
+			$('.tbActionRow').each(function(i, row) {
+				var thing = $(row).find('td:nth-child(1) select').val();
+				var value = $(row).find('td:nth-child(2) input').val();
+
+				var newAction = {thing: thing, value: value};
+
+				automationObj.actions.push(newAction);
+			});
+
+			for (var i = 0; i < automation.length; i++) {
+				if (automation[i].id === options[selectedIndex].value) {
+					automation[i] = automationObj;
+					break;
+				}
+			}
+
 			console.log(automation);
 
 		} else {
@@ -367,6 +395,15 @@ th {
 			alert(selectedid);
 
 			$.post(baseUrl + "/automation/delete", {automationid:selectedid}, function(data) {
+				for (var i = 0; i < automation.length; i++) {
+					if (automation[i].id === options[selectedIndex].value) {
+						automation.splice(i, 1);
+						break;
+					}
+				}
+
+				$('#comboAuto option:selected').remove();
+				alert(data);
 			});
 		}
 
