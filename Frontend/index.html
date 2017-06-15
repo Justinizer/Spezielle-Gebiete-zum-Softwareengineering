@@ -86,8 +86,8 @@ th {
 </head>
 <body>
 	<script>
-	//var backendip = "127.0.0.1:8080/SHP-Web"
-	var backendip = "192.168.1.1:8080/SHP-Web"
+	var backendip = "127.0.0.1:8080/SHP-Web";
+	//var backendip = "192.168.1.1:8080/SHP-Web"
 	var baseUrl ="http://" + backendip + "/rest/gui";
 	var conditionRowId = 0;
 	var actionRowId = 0;
@@ -294,6 +294,7 @@ th {
 
 	function getAutomationById(id) {
 		for (var i = 0; i < automation.length; i++) {
+			var temp = automation[i].id;
 			if (automation[i].id === id) {
 				return automation[i];
 			}
@@ -340,6 +341,34 @@ th {
 				}
 			}
 
+
+			$.post(baseUrl + "/automation/create", {name:automationObj.name}, function(answer) {
+				if(answer.status ==="successful"){
+					var newAutoId = answer.id;
+					for (var i = 0; i < automationObj.actions.length; i++) {
+						var action = automationObj.actions[i];
+						var tthing = action.thing;
+						$.post(baseUrl + "/automation/action", {name:automationObj.name,autoid:newAutoId,thing:tthing,value:action.value}, function(manswer) {
+							//alert(masnwer);
+							});
+					}
+
+
+					for (var i = 0; i < automationObj.conditions.length; i++) {
+						var condition = automationObj.conditions[i];
+						var tthing = condition.thing;
+						$.post(baseUrl + "/automation/condition", {autoid:newAutoId,thingid:tthing,type:condition.type,value:condition.value}, function(manswer) {
+							//alert(masnwer);
+							});
+					}
+					
+				}
+				alert(answer);
+			});
+
+			
+			
+
 			console.log(automation);
 
 		} else {
@@ -347,6 +376,8 @@ th {
 			// Update existig automation
 		}
 	}
+
+	
 
 	function addAutomation() {
 		$(".tbConditionRow").remove(); 		
