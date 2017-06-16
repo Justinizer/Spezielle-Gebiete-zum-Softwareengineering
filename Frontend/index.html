@@ -230,6 +230,7 @@ th {
 		$(".tbActionRow").remove(); 
 
 		$('#automationNameField').val(selectedAuto.name);
+		$('#automationActivated').prop('checked', selectedAuto.active);
 
 		$.each(selectedAuto.conditions, function(ci, condi) {
 			var conditionid = condi.id;
@@ -314,7 +315,7 @@ th {
 		var isNewAutomation = options[selectedIndex].value.startsWith("newAuto");
 
 
-		var automationObj = {actions: [], active: true, conditions: [], name: $('#automationNameField').val()};
+		var automationObj = {actions: [], active: $('#automationActivated').prop('checked'), conditions: [], name: $('#automationNameField').val()};
 		options[selectedIndex].innerHTML = automationObj.name;
 
 		if (!isNewAutomation) {
@@ -415,6 +416,7 @@ th {
 		$(".tbActionRow").remove(); 
 
 		$('#automationNameField').val("Neue Regel");
+		$('#automationActivated').prop('checked', true);
 
 		$('#comboAuto').append(new Option("Neue Regel", "newAuto" + newAutomationId, false, true));
 
@@ -501,7 +503,7 @@ th {
 			<input type="button" class="button" value="Löschen" onclick="deleteAutomation()">
 			<input type="button" class="button" value="Regel hinzufügen" onclick="addAutomation()">
 			<input type="button" class="button" value="Änderungen übernehmen" onclick="submitChanges()"><br>
-			Name: <input type="text" id="automationNameField"><br>
+			Name: <input type="text" id="automationNameField"><input type="checkbox" id="automationActivated">Aktiviert<br>
 			<div style="margin-top: 10px;">
 				<table id="tbCondition">
 					<tr>
