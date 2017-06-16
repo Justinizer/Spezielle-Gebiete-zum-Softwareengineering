@@ -329,7 +329,7 @@ th {
 			var type = $(row).find('td:nth-child(2) select').val();
 			var value = $(row).find('td:nth-child(3) input').val();
 
-			var newCond = {devicename: "", thing: thing, type: type, value: value};
+			var newCond = {thing: thing, type: type, value: value};
 
 			if ($(row).find('td:nth-child(1)').attr('id') && $(row).find('td:nth-child(1)').attr('id').startsWith('conditionNameTD')) {
 				var idString = $(row).find('td:nth-child(1)').attr('id');
@@ -356,8 +356,6 @@ th {
 
 
 		saveAutomation(automationObj);
-
-		console.log(automation);
 	}
 
 	function saveAutomation(automationObj) {
@@ -369,36 +367,64 @@ th {
 			param.automationid = automationObj.id;
 			param.active = automationObj.active;
 		}
-		console.log(param);
+
 		$.post(baseUrl + "/automation" + actionUrl, param, function(answer) {
-			if(answer.status ==="successful"){
-				var newAutoId = answer.id;
+			var newAutoId;
 
-				actionsToSave = automationObj.actions.length;
-				for (var i = 0; i < actionsToSave; i++) {
-					var action = automationObj.actions[i];
-					var tthing = action.thing;
+			if ('id' in answer) {
+				newAutoId = answer.id;
 
-					$.post(baseUrl + "/automation/action", {name:automationObj.name,autoid:newAutoId,thing:tthing,value:action.value}, function(manswer) {
-						savedActions += 1;
-						reloadAutomations();
-					});
-				}
-
-				conditionsToSave = automationObj.conditions.length;
-				for (var i = 0; i < conditionsToSave; i++) {
-					var condition = automationObj.conditions[i];
-					var tthing = condition.thing;
-
-					$.post(baseUrl + "/automation/condition", {autoid:newAutoId,thingid:tthing,type:condition.type,value:condition.value}, function(manswer) {
-						savedConditions += 1;
-						reloadAutomations();
-					});
-				}
-				
+			} else {
+				newAutoId = automationObj.id;
 			}
 
-			console.log(answer);
+			actionsToSave = automationObj.actions.length;
+			for (var i = 0; i < actionsToSave; i++) {
+				var action = automationObj.actions[i];
+				var actionIdUrl = "";
+
+				param = {name:automationObj.name, value:action.value};
+
+
+				if ('id' in action) {
+					actionIdUrl = "/" + action.id;
+					param.thingid = action.thing;
+
+				} else {
+					param.autoid = newAutoId;
+					param.thing = action.thing;
+				}
+
+
+				$.post(baseUrl + "/automation/action" + actionIdUrl, param, function(manswer) {
+					savedActions += 1;
+					reloadAutomations();
+				});
+			}
+
+			conditionsToSave = automationObj.conditions.length;
+			for (var i = 0; i < conditionsToSave; i++) {
+				var condition = automationObj.conditions[i];
+				var conditionIdUrl = "";
+
+				param = {thingid: condition.thing, value: condition.value};
+
+
+				if ('id' in condition) {
+					conditionIdUrl = "/" + condition.id;
+					param.conditionType = condition.type;
+
+				} else {
+					param.autoid = newAutoId;
+					param.type = condition.type;
+				}
+
+
+				$.post(baseUrl + "/automation/condition" + conditionIdUrl, param, function(manswer) {
+					savedConditions += 1;
+					reloadAutomations();
+				});
+			}
 		});
 	}
 
@@ -426,8 +452,6 @@ th {
 	}
 
 	function deleteAutomation(){
-		alert("del");
-
 		var selectedIndex = document.getElementById('comboAuto').selectedIndex;
 		var options = document.getElementById('comboAuto').options;
 		var selectedAuto;
@@ -456,8 +480,6 @@ th {
 				}
 			});
 
-			alert(selectedid);
-
 			$.post(baseUrl + "/automation/delete", {automationid:selectedid}, function(data) {
 				for (var i = 0; i < automation.length; i++) {
 					if (automation[i].id === options[selectedIndex].value) {
@@ -466,8 +488,8 @@ th {
 					}
 				}
 
+				console.log('Deleted automation with ID ' + selectedid);
 				$('#comboAuto option:selected').remove();
-				alert(data);
 			});
 		}
 
