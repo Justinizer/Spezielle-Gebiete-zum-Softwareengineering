@@ -98,6 +98,8 @@ th {
 	var conditionsToSave = 0;
 	var savedActions = 0;
 	var actionsToSave = 0;
+	var deleteActionList = [];
+	var deleteConditionList = [];
 	var combo = $("<select></select>");
 	var actors = $("<select></select>");
 	var sensors =$("<select></select>");
@@ -197,10 +199,48 @@ th {
 	}
 
 	function removeConditionRow(rowId) {
+		if ($('#conditionRowId' + rowId).find('td:nth-child(1)').attr('id') && $('#conditionRowId' + rowId).find('td:nth-child(1)').attr('id').startsWith('conditionNameTD')) {
+			var conditionIdString = $('#conditionRowId' + rowId).find('td:nth-child(1)').attr('id');
+			var conditionId = conditionIdString.replace('conditionNameTD', '');
+			var condition = {};
+
+			var selectedIndex = document.getElementById("comboAuto").selectedIndex;
+			var options = document.getElementById("comboAuto").options;
+			var selectedAutomation = getAutomationById(options[selectedIndex].id.replace('autoid', ''));
+
+			for (var i = 0; i < selectedAutomation.conditions.length; i++) {
+				if (selectedAutomation.conditions[i].id == conditionId) {
+					condition = selectedAutomation.conditions[i];
+					break;
+				}
+			}
+
+			deleteConditionList.push(condition);
+		}
+
 		$('#conditionRowId' + rowId).remove();
 	}
 
 	function removeActionRow(rowId) {
+		if ($('#actionRowId' + rowId).find('td:nth-child(1)').attr('id') && $('#actionRowId' + rowId).find('td:nth-child(1)').attr('id').startsWith('actionNameTD')) {
+			var actionIdString = $('#actionRowId' + rowId).find('td:nth-child(1)').attr('id');
+			var actionId = actionIdString.replace('actionNameTD', '');
+			var action = {};
+
+			var selectedIndex = document.getElementById("comboAuto").selectedIndex;
+			var options = document.getElementById("comboAuto").options;
+			var selectedAutomation = getAutomationById(options[selectedIndex].id.replace('autoid', ''));
+
+			for (var i = 0; i < selectedAutomation.actions.length; i++) {
+				if (selectedAutomation.actions[i].id == actionId) {
+					action = selectedAutomation.actions[i];
+					break;
+				}
+			}
+
+			deleteActionList.push(action);
+		}
+
 		$('#actionRowId' + rowId).remove();
 	}
 
@@ -232,27 +272,35 @@ th {
 		$('#automationNameField').val(selectedAuto.name);
 		$('#automationActivated').prop('checked', selectedAuto.active);
 
+		deleteConditionList = [];
+		deleteActionList = [];
+
 		$.each(selectedAuto.conditions, function(ci, condi) {
 			var conditionid = condi.id;
 			$('#tbCondition tr:last').prev().after(
-					'<tr class="tbConditionRow"><td id="conditionNameTD' + conditionid + '"><select id="conditionThing' + conditionid + '">' + sensors.html() + "</select></td>" + 
+					'<tr class="tbConditionRow" id="conditionRowId' + conditionRowId + '"><td id="conditionNameTD' + conditionid + '"><select id="conditionThing' + conditionid + '">' + sensors.html() + "</select></td>" + 
 					"<td><select id='select" + conditionid + "'>" + combo.html() + "</select></td>" + 
 					"<td><input id='condiValue" + conditionid + "' type='text' value='" +condi.value + "'/></td>" +
-					'<td><input type="button" class="button" value="Entfernen"></td></tr>' );
+					'<td><input type="button" class="button" value="Entfernen" onclick="removeConditionRow(' + conditionRowId + ')"></td></tr>' );
 
 			$("#select" + conditionid  + " :nth-child(" +  (condi.type +1) + ")").prop('selected', true);				
 			$("#conditionThing" + conditionid + " option[value=" + condi.thing  +"]").prop('selected', true);
+
+			conditionRowId += 1;
 		});
 
 		
 		$.each(selectedAuto.actions, function(ai, action) {
 			var actionid = action.id;
 			$('#tbAction tr:last').prev().after(
-					'<tr class="tbActionRow"><td id="actionNameTD' + actionid + '"><select id="actionThing' + actionid + '">' + actors.html() + "</select></td>" + 
+					'<tr class="tbActionRow" id="actionRowId' + actionRowId + '"><td id="actionNameTD' + actionid + '"><select id="actionThing' + actionid +
+					'">' + actors.html() + "</select></td>" + 
 					"<td><input id='actionValue" + actionid + "' type='text' value='" +action.value + "'/></td>" +
-					'<td><input type="button" class="button" value="Entfernen"></td></tr>' );
+					'<td><input type="button" class="button" value="Entfernen" onclick="removeActionRow(' + actionRowId + ')"></td></tr>' );
 
 			$("#actionThing" + actionid + " option[value=" + action.thing  +"]").prop('selected', true);
+
+			actionRowId += 1;
 		});
 	
 	}
@@ -322,6 +370,20 @@ th {
 			var id = options[selectedIndex].id;
 			automationObj.id = getAutomationById(id.replace('autoid', '')).id;
 		}
+
+		for (var i = 0; i < deleteConditionList.length; i++) {
+			$.ajax({url: baseUrl + "/automation/condition/" + deleteConditionList[i].id, type: 'DELETE', success: function(result) {
+				console.log(result);
+			}});
+		}
+		deleteConditionList = [];
+
+		for (var i = 0; i < deleteActionList.length; i++) {
+			$.ajax({url: baseUrl + "/automation/action/" + deleteActionList[i].id, type: 'DELETE', success: function(result) {
+				console.log(result);
+			}});
+		}
+		deleteActionList = [];
 
 
 		$('.tbConditionRow').each(function(i, row) {
