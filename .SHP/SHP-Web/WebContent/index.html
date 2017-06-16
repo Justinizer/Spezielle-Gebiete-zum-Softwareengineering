@@ -94,6 +94,10 @@ th {
 	var newAutomationId = 0;
 	var jsonThings;
 	var conditionTypes;
+	var savedConditions = 0;
+	var conditionsToSave = 0;
+	var savedActions = 0;
+	var actionsToSave = 0;
 	var combo = $("<select></select>");
 	var actors = $("<select></select>");
 	var sensors =$("<select></select>");
@@ -155,6 +159,9 @@ th {
 		$.getJSON(baseUrl + "/automation", function(data) {
 			console.log(data);
 			automation = data;
+
+			// Remove all options before appending the new options
+			$('#comboAuto').find('option').remove();
 
 			$.each(data, function(ai, auto) {			
 				  
@@ -223,6 +230,7 @@ th {
 		$(".tbActionRow").remove(); 
 
 		$('#automationNameField').val(selectedAuto.name);
+		$('#automationActivated').prop('checked', selectedAuto.active);
 
 		$.each(selectedAuto.conditions, function(ci, condi) {
 			var conditionid = condi.id;
@@ -295,7 +303,7 @@ th {
 	function getAutomationById(id) {
 		for (var i = 0; i < automation.length; i++) {
 			var temp = automation[i].id;
-			if (automation[i].id === id) {
+			if (automation[i].id == id) {
 				return automation[i];
 			}
 		}
@@ -304,86 +312,111 @@ th {
 	function submitChanges() {
 		var selectedIndex =  document.getElementById('comboAuto').selectedIndex;
 		var options = document.getElementById('comboAuto').options;
-
-		if (options[selectedIndex].value.startsWith("newAuto")) {
-
-			// New automation
-			var automationObj = {actions: [], active: true, conditions: [], name: $('#automationNameField').val()};
-			options[selectedIndex].innerHTML = automationObj.name;
-
-			getAutomationById(options[selectedIndex].value).name = automationObj.name;
+		var isNewAutomation = options[selectedIndex].value.startsWith("newAuto");
 
 
-			$('.tbConditionRow').each(function(i, row) {
-				var thing = $(row).find('td:nth-child(1) select').val();
-				var type = $(row).find('td:nth-child(2) select').val();
-				var value = $(row).find('td:nth-child(3) input').val();
+		var automationObj = {actions: [], active: $('#automationActivated').prop('checked'), conditions: [], name: $('#automationNameField').val()};
+		options[selectedIndex].innerHTML = automationObj.name;
 
-				var newCond = {devicename: "", thing: thing, type: type, value: value};
+		if (!isNewAutomation) {
+			var id = options[selectedIndex].id;
+			automationObj.id = getAutomationById(id.replace('autoid', '')).id;
+		}
 
 
-				automationObj.conditions.push(newCond);
-			});
+		$('.tbConditionRow').each(function(i, row) {
+			var thing = $(row).find('td:nth-child(1) select').val();
+			var type = $(row).find('td:nth-child(2) select').val();
+			var value = $(row).find('td:nth-child(3) input').val();
 
-			$('.tbActionRow').each(function(i, row) {
-				var thing = $(row).find('td:nth-child(1) select').val();
-				var value = $(row).find('td:nth-child(2) input').val();
+			var newCond = {devicename: "", thing: thing, type: type, value: value};
 
-				var newAction = {thing: thing, value: value};
-
-				automationObj.actions.push(newAction);
-			});
-
-			for (var i = 0; i < automation.length; i++) {
-				if (automation[i].id === options[selectedIndex].value) {
-					automation[i] = automationObj;
-					break;
-				}
+			if ($(row).find('td:nth-child(1)').attr('id') && $(row).find('td:nth-child(1)').attr('id').startsWith('conditionNameTD')) {
+				var idString = $(row).find('td:nth-child(1)').attr('id');
+				newCond.id = idString.replace('conditionNameTD', '');
 			}
 
-
-			$.post(baseUrl + "/automation/create", {name:automationObj.name}, function(answer) {
-				if(answer.status ==="successful"){
-					var newAutoId = answer.id;
-					for (var i = 0; i < automationObj.actions.length; i++) {
-						var action = automationObj.actions[i];
-						var tthing = action.thing;
-						$.post(baseUrl + "/automation/action", {name:automationObj.name,autoid:newAutoId,thing:tthing,value:action.value}, function(manswer) {
-							//alert(masnwer);
-							});
-					}
+			automationObj.conditions.push(newCond);
+		});
 
 
-					for (var i = 0; i < automationObj.conditions.length; i++) {
-						var condition = automationObj.conditions[i];
-						var tthing = condition.thing;
-						$.post(baseUrl + "/automation/condition", {autoid:newAutoId,thingid:tthing,type:condition.type,value:condition.value}, function(manswer) {
-							//alert(masnwer);
-							});
-					}
-					
-				}
-				alert(answer);
-			});
+		$('.tbActionRow').each(function(i, row) {
+			var thing = $(row).find('td:nth-child(1) select').val();
+			var value = $(row).find('td:nth-child(2) input').val();
 
-			
-			
+			var newAction = {thing: thing, value: value};
 
-			console.log(automation);
+			if ($(row).find('td:nth-child(1)').attr('id') && $(row).find('td:nth-child(1)').attr('id').startsWith('actionNameTD')) {
+				var idString = $(row).find('td:nth-child(1)').attr('id');
+				newAction.id = idString.replace('actionNameTD', '');
+			}
 
-		} else {
+			automationObj.actions.push(newAction);
+		});
 
-			// Update existig automation
-		}
+
+		saveAutomation(automationObj);
+
+		console.log(automation);
 	}
 
-	
+	function saveAutomation(automationObj) {
+		var param = {name:automationObj.name};
+		var actionUrl = "/create";
+
+		if ('id' in automationObj) {
+			actionUrl = "";
+			param.automationid = automationObj.id;
+			param.active = automationObj.active;
+		}
+		console.log(param);
+		$.post(baseUrl + "/automation" + actionUrl, param, function(answer) {
+			if(answer.status ==="successful"){
+				var newAutoId = answer.id;
+
+				actionsToSave = automationObj.actions.length;
+				for (var i = 0; i < actionsToSave; i++) {
+					var action = automationObj.actions[i];
+					var tthing = action.thing;
+
+					$.post(baseUrl + "/automation/action", {name:automationObj.name,autoid:newAutoId,thing:tthing,value:action.value}, function(manswer) {
+						savedActions += 1;
+						reloadAutomations();
+					});
+				}
+
+				conditionsToSave = automationObj.conditions.length;
+				for (var i = 0; i < conditionsToSave; i++) {
+					var condition = automationObj.conditions[i];
+					var tthing = condition.thing;
+
+					$.post(baseUrl + "/automation/condition", {autoid:newAutoId,thingid:tthing,type:condition.type,value:condition.value}, function(manswer) {
+						savedConditions += 1;
+						reloadAutomations();
+					});
+				}
+				
+			}
+
+			console.log(answer);
+		});
+	}
+
+	function reloadAutomations() {
+		if (savedConditions > 0 && savedConditions == conditionsToSave && savedActions > 0 && savedActions == actionsToSave) {
+			savedConditions = 0;
+			savedActions = 0;
+
+			getAutomationsAndLinkWithTable();
+		}
+	}
 
 	function addAutomation() {
 		$(".tbConditionRow").remove(); 		
 		$(".tbActionRow").remove(); 
 
 		$('#automationNameField').val("Neue Regel");
+		$('#automationActivated').prop('checked', true);
 
 		$('#comboAuto').append(new Option("Neue Regel", "newAuto" + newAutomationId, false, true));
 
@@ -470,7 +503,7 @@ th {
 			<input type="button" class="button" value="Löschen" onclick="deleteAutomation()">
 			<input type="button" class="button" value="Regel hinzufügen" onclick="addAutomation()">
 			<input type="button" class="button" value="Änderungen übernehmen" onclick="submitChanges()"><br>
-			Name: <input type="text" id="automationNameField"><br>
+			Name: <input type="text" id="automationNameField"><input type="checkbox" id="automationActivated">Aktiviert<br>
 			<div style="margin-top: 10px;">
 				<table id="tbCondition">
 					<tr>

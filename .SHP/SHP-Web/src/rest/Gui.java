@@ -371,6 +371,34 @@ bh.test();
 		return helper.getFail().toString();
 	}
 
+
+	@Produces("application/json")
+	@POST
+	@Path("automation/action/{id}")
+	public String updateAction(@PathParam("id") int actionid, @FormParam("name") String name, @FormParam("thingid") int thingid, 
+			@FormParam("value") String value) {
+		Automation a  =bh.updateAction(actionid, thingid, name, value);
+		if (a != null) {
+			return helper.getOneAutomation(a).toString();
+		} else {
+			return helper.getFail().toString();
+		}
+	}
+	
+	
+	@Produces("application/json")
+	@POST
+	@Path("automation/condition/{id}")
+	public String updateCondition(@PathParam("id") int conditionID, @FormParam("thingid") int thingid, 
+			@FormParam("value") String value, @FormParam("conditionType") int ct) {
+		Automation a  =bh.updateCondition(conditionID, thingid, ConditionType.getByIndex(ct), value);
+		if (a != null) {
+			return helper.getOneAutomation(a).toString();
+		} else {
+			return helper.getFail().toString();
+		}
+	}
+	
 	/**
 	 * update a given automation
 	 * 

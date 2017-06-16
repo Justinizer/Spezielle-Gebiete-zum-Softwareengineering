@@ -8,13 +8,14 @@ import javax.ejb.Remote;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-
+import javax.swing.DropMode;
 
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
+import Model.ConditionType;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
@@ -282,7 +283,50 @@ public class HomeBean implements HomeBeanRemote {
 		em.flush();
 		mb.reloadAutomations();
 		return c.getAutomation();
-
+	}
+	
+	@Override
+	public Automation updateAction(int actionid, int thingid, String name, String value){
+		if(!isLoggedin){
+			return null;
+		}
+		Action fromDB = em.find(Action.class, actionid);
+		if(fromDB == null){
+			return null;
+		}
+		Thing t = em.find(Thing.class, thingid);
+		if(t == null){
+			return null;
+		}
+		fromDB.setName(name);
+		fromDB.setValue(value);
+		fromDB.setThing(t);
+		em.merge(fromDB);
+		em.flush();
+		mb.reloadAutomations();
+		return getAutomationById(fromDB.getAutomation().getId());
+	}
+	
+	@Override
+	public Automation updateCondition(int conditionID, int thingID, ConditionType type, String value){
+		if(!isLoggedin){
+			return null;
+		}
+		Condition fromDB = em.find(Condition.class, conditionID);
+		if(fromDB != null){
+			fromDB.setValue(value);
+			Thing t = em.find(Thing.class, thingID);
+			if(t == null){
+				return null;
+			}
+			fromDB.setThing(t);
+			fromDB.setType(type);
+			em.merge(fromDB);
+			em.flush();
+			mb.reloadAutomations();
+			return getAutomationById(fromDB.getAutomation().getId());
+		}
+		return null;
 	}
 
 	/*

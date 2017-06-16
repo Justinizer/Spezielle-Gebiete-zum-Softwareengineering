@@ -8,6 +8,7 @@ import Bean.Weather;
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
+import Model.ConditionType;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
@@ -152,6 +153,9 @@ public interface HomeBeanRemote {
 	
 	
 	public boolean deleteAutomation(int autoid);
+	
+	public Automation updateCondition(int conditionID, int thingID, ConditionType type, String value);
+	public Automation updateAction(int actionid, int thingid, String name, String value);
 	
 	/**
 	 * Get the current weather for the configured point 
