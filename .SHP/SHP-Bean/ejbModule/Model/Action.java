@@ -58,5 +58,12 @@ public class Action implements Serializable {
 	public Thing getThing(){
 		return thing;
 	}
+	public void setThing(Thing newThing){
+		thing = newThing;
+	}
+	
+	public Automation getAutomation(){
+		return auto;
+	}
    
 }

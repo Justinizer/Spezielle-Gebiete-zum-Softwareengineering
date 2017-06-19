@@ -4,9 +4,11 @@ import java.util.List;
 
 import javax.ejb.Remote;
 
+import Bean.Weather;
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
+import Model.ConditionType;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
@@ -17,6 +19,10 @@ import Model.Thing;
  */
 @Remote
 public interface HomeBeanRemote {
+	/**
+	 * Test Method.
+	 * @return "Bean working" if is working
+	 */
 	public String test();
 
 	/**
@@ -34,8 +40,6 @@ public interface HomeBeanRemote {
 	 * @return true = correct
 	 */
 	public boolean checkLogin(String email, String pw);
-	
-	
 	
 	/**
 	 * get all things for the current user
@@ -90,8 +94,7 @@ public interface HomeBeanRemote {
 	 * @param message 
 	 * @return true = success
 	 */
-	public boolean publish(int id, String message);
-	
+	public boolean publish(int id, String message);	
 
 	
 	/**
@@ -111,15 +114,33 @@ public interface HomeBeanRemote {
 	 * add a new Automation to the DB
 	 * @param automationName
 	 */
-	public void addAutomation(String automationName);
+	public Automation addAutomation(String automationName);
 	
-	public void addCondition(Condition c);
+	/**
+	 * add a condition to a automation. The automation is set in the condition object
+	 * @param c
+	 */
+	public Automation addCondition(Condition c);
 	
-	public void addAction(Action a);
+	/**
+	 * add an action to a automation. The automation is set in the Action object
+	 * @param a
+	 */
+	public Automation addAction(Action a);
 	
-	public boolean deleteAction(int actionid);
+	/**
+	 * delete an action
+	 * @param actionid
+	 * @return
+	 */
+	public Automation deleteAction(int actionid);
 	
-	public boolean deleteCondition(int conditionid);
+	/**
+	 * delete a condition
+	 * @param conditionid
+	 * @return
+	 */
+	public Automation deleteCondition(int conditionid);
 	
 	/**
 	 * update a given automation
@@ -128,7 +149,19 @@ public interface HomeBeanRemote {
 	 * @param active
 	 * @return
 	 */
-	public boolean updateAutomation(int autoid, String name, boolean active);
+	public Automation updateAutomation(int autoid, String name, boolean active);
+	
+	
+	public boolean deleteAutomation(int autoid);
+	
+	public Automation updateCondition(int conditionID, int thingID, ConditionType type, String value);
+	public Automation updateAction(int actionid, int thingid, String name, String value);
+	
+	/**
+	 * Get the current weather for the configured point 
+	 * @return
+	 */
+	public Weather getWeather();
 	
 	
 	

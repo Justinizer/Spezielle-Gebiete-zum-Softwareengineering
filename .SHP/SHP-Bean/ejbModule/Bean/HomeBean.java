@@ -8,12 +8,14 @@ import javax.ejb.Remote;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.swing.DropMode;
 
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
+import Model.ConditionType;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
@@ -27,6 +29,8 @@ import Model.User;
 @Remote(HomeBeanRemote.class)
 public class HomeBean implements HomeBeanRemote {
 
+	
+	
 	@PersistenceContext
 	EntityManager em;
 
@@ -50,6 +54,7 @@ public class HomeBean implements HomeBeanRemote {
 	 */
 	@Override
 	public String test() {
+
 		return "Bean working";
 	}
 
@@ -163,8 +168,9 @@ public class HomeBean implements HomeBeanRemote {
 	public void addData(SensorData s) {
 		em.persist(s);
 		em.flush();
-
 	}
+	
+
 
 	/*
 	 * (non-Javadoc)
@@ -250,14 +256,16 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#addAutomation(java.lang.String)
 	 */
 	@Override
-	public void addAutomation(String automationName) {
+	public Automation addAutomation(String automationName) {
 		if (!isLoggedin) {
-			return;
+			return null;
 		}
 		Automation auto = new Automation(automationName);
 		em.persist(auto);
 		em.flush();
 		mb.reloadAutomations();
+		System.out.println("bean auto added");
+		return auto;
 
 	}
 
@@ -267,14 +275,58 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#addCondition(Model.Condition)
 	 */
 	@Override
-	public void addCondition(Condition c) {
+	public Automation addCondition(Condition c) {
 		if (!isLoggedin) {
-			return;
+			return null;
 		}
 		em.persist(c);
 		em.flush();
 		mb.reloadAutomations();
-
+		return c.getAutomation();
+	}
+	
+	@Override
+	public Automation updateAction(int actionid, int thingid, String name, String value){
+		if(!isLoggedin){
+			return null;
+		}
+		Action fromDB = em.find(Action.class, actionid);
+		if(fromDB == null){
+			return null;
+		}
+		Thing t = em.find(Thing.class, thingid);
+		if(t == null){
+			return null;
+		}
+		fromDB.setName(name);
+		fromDB.setValue(value);
+		fromDB.setThing(t);
+		em.merge(fromDB);
+		em.flush();
+		mb.reloadAutomations();
+		return getAutomationById(fromDB.getAutomation().getId());
+	}
+	
+	@Override
+	public Automation updateCondition(int conditionID, int thingID, ConditionType type, String value){
+		if(!isLoggedin){
+			return null;
+		}
+		Condition fromDB = em.find(Condition.class, conditionID);
+		if(fromDB != null){
+			fromDB.setValue(value);
+			Thing t = em.find(Thing.class, thingID);
+			if(t == null){
+				return null;
+			}
+			fromDB.setThing(t);
+			fromDB.setType(type);
+			em.merge(fromDB);
+			em.flush();
+			mb.reloadAutomations();
+			return getAutomationById(fromDB.getAutomation().getId());
+		}
+		return null;
 	}
 
 	/*
@@ -296,14 +348,14 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#addAction(Model.Action)
 	 */
 	@Override
-	public void addAction(Action a) {
+	public Automation addAction(Action a) {
 		if (!isLoggedin) {
-			return;
+			return null;
 		}
 		em.persist(a);
 		em.flush();
 		mb.reloadAutomations();
-
+		return a.getAutomation();
 	}
 
 	/*
@@ -312,62 +364,103 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#deleteAction(int)
 	 */
 	@Override
-	public boolean deleteAction(int actionid) {
+	public Automation deleteAction(int actionid) {
 		if (!isLoggedin) {
-			return false;
+			return null;
 		}
 		Action a = em.find(Action.class, actionid);
 		if (a == null) {
-			return false;
+			return null;
 		} else {
 			em.remove(a);
 			em.flush();
 			mb.reloadAutomations();
-			return true;
+			return em.find(Automation.class, a.getAutomation().getId());
 		}
 
 	}
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see Interface.HomeBeanRemote#deleteCondition(int)
 	 */
 	@Override
-	public boolean deleteCondition(int conditionid) {
+	public Automation deleteCondition(int conditionid) {
 		if (!isLoggedin) {
-			return false;
+			return null;
 		}
 		Condition c = em.find(Condition.class, conditionid);
 		if (c == null) {
-			return false;
+			return null;
 		} else {
 			em.remove(c);
 			em.flush();
 			mb.reloadAutomations();
-			return true;
+			return em.find(Automation.class, c.getAutomation().getId());
 		}
 
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#updateAutomation(int, java.lang.String, boolean)
+	 */
 	@Override
-	public boolean updateAutomation(int autoid, String name, boolean active) {
+	public Automation updateAutomation(int autoid, String name, boolean active) {
 		if (!isLoggedin) {
-			return false;
+			return null;
 		}
 		Automation auto = em.find(Automation.class, autoid);
-		if(auto == null){
-			return false;
+		if (auto == null) {
+			return null;
 		}
-		
-		if(name != null){
-			if(name.length()> 0){
+
+		if (name != null) {
+			if (name.length() > 0) {
 				auto.setName(name);
 			}
 		}
-		
+
 		auto.setActive(active);
 		em.merge(auto);
 		em.flush();
 		mb.reloadAutomations();
-		
-		return true;
+
+		return em.find(Automation.class,autoid);
 	}
+	
+	public boolean deleteAutomation(int autoid){
+		if (!isLoggedin) {
+			return false;
+		}
+		try{
+			Automation auto = em.find(Automation.class, autoid);
+			for(Condition c:auto.getConditions()){
+				em.remove(c);
+			}
+			for(Action a : auto.getActions()){
+				em.remove(a);
+			}
+			em.remove(auto);
+			em.flush();
+			mb.reloadAutomations();
+			return true;
+		}catch(Exception e){
+			
+		}
+		return false;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#getWeather()
+	 */
+	@Override
+	public Weather getWeather(){
+		return new Weather(52.2959618,8.9040964);
+	}
+
+
+
+	
 }

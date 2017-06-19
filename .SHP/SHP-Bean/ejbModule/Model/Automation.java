@@ -2,6 +2,7 @@ package Model;
 
 import java.io.Serializable;
 import java.lang.String;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.*;
@@ -55,11 +56,15 @@ public class Automation implements Serializable {
 
 	
 	public List<Condition> getConditions(){
+		if(conditions == null)
+			return new ArrayList<Condition>();
 		return conditions;
 	}
 	
 	
 	public List<Action> getActions(){
+		if(actions == null)
+			return new ArrayList<Action>();
 		return actions;
 	}
 	

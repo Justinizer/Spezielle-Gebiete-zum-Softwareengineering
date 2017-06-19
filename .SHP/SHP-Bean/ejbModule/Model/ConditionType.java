@@ -47,9 +47,9 @@ public enum ConditionType {
 		case notEqual:
 			return "ungleich";
 		case greaterThan:
-			return "größer als";
+			return "größer gleich";
 		case smallerThan:
-			return "kleiner als";
+			return "kleiner gleich";
 		default:
 			return "";
 		}

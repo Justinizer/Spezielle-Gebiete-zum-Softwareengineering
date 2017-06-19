@@ -1,11 +1,11 @@
 package rest;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.json.JsonObject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -18,6 +18,7 @@ import javax.ws.rs.Produces;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import Bean.Weather;
 import Interface.HomeBeanRemote;
 import Model.Action;
 import Model.Automation;
@@ -38,6 +39,7 @@ public class Gui implements Serializable {
 
 	private GuiHelper helper = new GuiHelper();
 
+
 	/**
 	 * REST Test Method
 	 * 
@@ -47,6 +49,9 @@ public class Gui implements Serializable {
 	@GET
 	public String test() {
 		System.out.println("TESTING!!");
+		//System.out.println(WebSocket.clientSessions.size());
+bh.test();
+		
 		return helper.getSuccess().toString();
 	}
 
@@ -181,6 +186,35 @@ public class Gui implements Serializable {
 		}
 		return json.toString();
 	}
+	
+	/**
+	 * get all sensor data for a specific thing
+	 * 
+	 * @param id
+	 *            the id of the thing
+	 * @return all the data
+	 */
+	@Produces("application/json")
+	@GET
+	@Path("thing/{id}/{days}")
+	public String getSensorDataTime(@PathParam("id") int id,@PathParam("days") int days) {
+		JSONArray json = new JSONArray();
+		long now = new Date().getTime();
+		/* ms per day */
+		long offset =(now/1000) - (86400 * days);
+		System.out.println(offset);
+		for (SensorData s : bh.getAllDataForThing(id)) {
+			System.out.println("sensor " +s.getTime());
+			if(s.getTime() >offset){
+				JSONObject inner = new JSONObject();
+				inner.put("time", s.getTime());
+				inner.put("value", s.getValue());
+				inner.put("id", s.getId());
+				json.put(inner);
+			}
+		}
+		return json.toString();
+	}
 
 	/**
 	 * get all sensor data for a specific thing
@@ -257,11 +291,14 @@ public class Gui implements Serializable {
 	 * @return
 	 */
 	@Produces("application/json")
-	@PUT
-	@Path("automation")
+	@POST
+	@Path("automation/create")
 	public String addAutomations(@FormParam("name") String autoname) {
-		bh.addAutomation(autoname);
-		return helper.getSuccess().toString();
+		Automation a= bh.addAutomation(autoname);
+		if(a != null){
+			return helper.getOneAutomation(a).put("status", "successful").toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -278,7 +315,7 @@ public class Gui implements Serializable {
 	 * @return
 	 */
 	@Produces("application/json")
-	@PUT
+	@POST
 	@Path("automation/condition")
 	public String addCondition(@FormParam("autoid") int autoid, @FormParam("thingid") int thingid,
 			@FormParam("type") int type, @FormParam("value") String value) {
@@ -289,9 +326,11 @@ public class Gui implements Serializable {
 			return helper.getFail().toString();
 		}
 		Condition c = new Condition(a, ct, t, value);
-		bh.addCondition(c);
-
-		return helper.getSuccess().toString();
+		Automation an= bh.addCondition(c);
+		if(an != null){
+			return helper.getOneAutomation(an).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -308,7 +347,7 @@ public class Gui implements Serializable {
 	 * @return
 	 */
 	@Produces("application/json")
-	@PUT
+	@POST
 	@Path("automation/action")
 	public String addAction(@FormParam("name") String actionname, @FormParam("autoid") int auto,
 			@FormParam("thing") int thing, @FormParam("value") String value) {
@@ -318,9 +357,12 @@ public class Gui implements Serializable {
 			return helper.getFail().toString();
 		}
 		Action action = new Action(actionname, value, t, a);
-		bh.addAction(action);
+		Automation an= bh.addAction(action);
 
-		return helper.getSuccess().toString();
+		if(an != null){
+			return helper.getOneAutomation(an).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -334,8 +376,11 @@ public class Gui implements Serializable {
 	@DELETE
 	@Path("automation/action/{actionid}")
 	public String deleteAction(@PathParam("actionid") int actionid) {
-		bh.deleteAction(actionid);
-		return helper.getSuccess().toString();
+		Automation a =bh.deleteAction(actionid);
+		if(a != null){
+			return helper.getOneAutomation(a).toString();
+		}
+		return helper.getFail().toString();
 	}
 
 	/**
@@ -349,10 +394,41 @@ public class Gui implements Serializable {
 	@DELETE
 	@Path("automation/condition/{conditionid}")
 	public String deleteCondtition(@PathParam("conditionid") int conditionid) {
-		bh.deleteCondition(conditionid);
-		return helper.getSuccess().toString();
+		Automation a = bh.deleteCondition(conditionid);
+		if(a != null){
+			return helper.getOneAutomation(a).toString();
+		}
+		return helper.getFail().toString();
 	}
 
+
+	@Produces("application/json")
+	@POST
+	@Path("automation/action/{id}")
+	public String updateAction(@PathParam("id") int actionid, @FormParam("name") String name, @FormParam("thingid") int thingid, 
+			@FormParam("value") String value) {
+		Automation a  =bh.updateAction(actionid, thingid, name, value);
+		if (a != null) {
+			return helper.getOneAutomation(a).toString();
+		} else {
+			return helper.getFail().toString();
+		}
+	}
+	
+	
+	@Produces("application/json")
+	@POST
+	@Path("automation/condition/{id}")
+	public String updateCondition(@PathParam("id") int conditionID, @FormParam("thingid") int thingid, 
+			@FormParam("value") String value, @FormParam("conditionType") int ct) {
+		Automation a  =bh.updateCondition(conditionID, thingid, ConditionType.getByIndex(ct), value);
+		if (a != null) {
+			return helper.getOneAutomation(a).toString();
+		} else {
+			return helper.getFail().toString();
+		}
+	}
+	
 	/**
 	 * update a given automation
 	 * 
@@ -369,11 +445,23 @@ public class Gui implements Serializable {
 	@Path("automation")
 	public String updateAutomation(@FormParam("automationid") int autoid, @FormParam("name") String name,
 			@FormParam("active") boolean active) {
-		if (bh.updateAutomation(autoid, name, active)) {
-			return helper.getSuccess().toString();
+		Automation a  =bh.updateAutomation(autoid, name, active);
+		if (a != null) {
+			return helper.getOneAutomation(a).toString();
 		} else {
 			return helper.getFail().toString();
 		}
+	}
+	
+	@Produces("application/json")
+	@POST
+	@Path("automation/delete")	
+	public String deleteAutomation(@FormParam("automationid") int autoid){
+		if(bh.deleteAutomation(autoid)){
+			return helper.getSuccess().toString();
+		}
+		return helper.getFail().toString();
+		
 	}
 	
 	/**
@@ -396,5 +484,19 @@ public class Gui implements Serializable {
 		return ob.toString();
 		
 	}
+	
+	@Produces("application/json")
+	@GET
+	@Path("weather")
+	public String getWeather(){
+		Weather wr = bh.getWeather();
+		JSONObject json = new JSONObject();
+		json.put("name", wr.getWeatherName());
+		json.put("img", wr.getWeather());
+		return json.toString();
+		
+		
+	}
+	
 
 }

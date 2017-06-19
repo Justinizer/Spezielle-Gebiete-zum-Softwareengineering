@@ -1,10 +1,14 @@
 package Bean;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -13,6 +17,8 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.websocket.Session;
+
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -37,6 +43,11 @@ import Model.Thing;
 @Remote(MqttBeanRemote.class)
 public class MqttBean implements MqttCallback, MqttBeanRemote {
 	public static MqttClient client;
+	
+	/* kind of ugly to have it like that, but to make it nice a JMS needs to be added... 
+	 * now the SHP-Web.websocket.WebSocket websocket endpoint adds and removes the sessions*/
+	public static final Set<Session> clientSessions = Collections.synchronizedSet(new HashSet<Session>());
+	
 
 	@PersistenceContext
 	EntityManager em;
@@ -142,26 +153,30 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	}
 
 	/**
-	 * callback for the mqtt client. Is called, when a new message for a subsribed topic is received
+	 * callback for the mqtt client. Is called, when a new message for a
+	 * subsribed topic is received
 	 */
 	@Override
 	public void messageArrived(String topic, MqttMessage arg1) {
 		System.out.println(topic + " " + new String(arg1.getPayload()));
 		Thing databaseThing = things.get(topic);
 		SensorData data = new SensorData(new String(arg1.getPayload()), databaseThing);
-		try{
-			hb.addData(data);
-		}catch(Exception e){
-			System.out.println("MQTT BEAN:");
-			e.printStackTrace();
-		}
 		
 		/*
 		 * warum ich den umweg über die hb gehe und nicht einfach
 		 * em.persis(data) mache? weils nicht geht... namedquerrys gehen,
 		 * persist nicht :(
-		 */
+		 */			
+		try {
+			hb.addData(data);
+		} catch (Exception e) {
+			System.out.println("MQTT BEAN:");
+			e.printStackTrace();
+		}		
 
+		handleWSSessions(databaseThing, data);
+		
+		
 		List<Automation> affectedAutos = autos.get(topic);
 		if (affectedAutos == null) {
 			return;
@@ -172,9 +187,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			System.out.println("affected: " + a.getName());
 			if (a.fulfilled(data.getValue(), topic)) {
 				/* conditions are fulfilled: FIRE the actions */
-				
 				System.out.println(a.getName() + "  firing!");
-				/* fire all actions */
 				for (Action action : a.getActions()) {
 					publish(action.getThing().getMqttTopic(), action.getValue());
 				}
@@ -182,6 +195,29 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			}
 		}
 
+
+	}
+	
+	
+	/**
+	 * update the websockets with the new data
+	 * @param databaseThing the thing
+	 * @param data the new data
+	 */
+	private void handleWSSessions(Thing databaseThing, SensorData data){
+		ArrayList<Session> toDelete = new ArrayList<Session>();
+		
+		for (Session s : clientSessions){
+			try {
+				s.getBasicRemote().sendText("{\"id\":" + databaseThing.getId() + ", \"value\": \"" + data.getValue() + "\", \"type\":\"" + databaseThing.getType() + "\"}");
+			} catch (IOException e) {
+				toDelete.add(s);
+			}
+		}
+		
+		for(Session s: toDelete){
+			clientSessions.remove(s);
+		}
 	}
 
 	/**
