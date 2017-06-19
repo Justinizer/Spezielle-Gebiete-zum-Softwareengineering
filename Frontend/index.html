@@ -8,26 +8,26 @@
   google.charts.load('current', {'packages':['corechart']});
   //google.charts.setOnLoadCallback(drawChart);
    /* var data = google.visualization.arrayToDataTable([
-      ['Year', 'Sales', 'Expenses'],
-      ['2004',  1000,      400],
-      ['2005',  1170,      460],
-      ['2006',  660,       1120],
-      ['2007',  1030,      540]
-    ]);*/
+	  ['Year', 'Sales', 'Expenses'],
+	  ['2004',  1000,      400],
+	  ['2005',  1170,      460],
+	  ['2006',  660,       1120],
+	  ['2007',  1030,      540]
+	]);*/
 
   function drawChart(data, title) {
-  	data = google.visualization.arrayToDataTable(data);
+	data = google.visualization.arrayToDataTable(data);
 
-    var options = {
-      title: title,
-      curveType: 'function',
-      explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 4.0},
-      legend: { position: 'bottom' }
-    };
+	var options = {
+	  title: title,
+	  curveType: 'function',
+	  explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 4.0},
+	  legend: { position: 'bottom' }
+	};
 
-    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+	var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
 
-    chart.draw(data, options);
+	chart.draw(data, options);
   }
 </script>
 
@@ -108,6 +108,45 @@ th {
 
 #configurationTable {
 	border: 1px solid black;
+}
+
+/* The Modal (background) */
+.modal {
+	display: none; /* Hidden by default */
+	position: fixed; /* Stay in place */
+	z-index: 1; /* Sit on top */
+	padding-top: 100px; /* Location of the box */
+	left: 0;
+	top: 0;
+	width: 100%; /* Full width */
+	height: 100%; /* Full height */
+	overflow: auto; /* Enable scroll if needed */
+	background-color: rgb(0,0,0); /* Fallback color */
+	background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+	background-color: #fefefe;
+	margin: auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 80%;
+}
+
+/* The Close Button */
+.close {
+	color: #aaaaaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+	color: #000;
+	text-decoration: none;
+	cursor: pointer;
 }
 </style>
 </head>
@@ -349,7 +388,7 @@ th {
 			switch(item.type) {
 				case "Sensor":
 					var unit = (item.unit === undefined) ? "" : item.unit;
-					$('#sensorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value + ' ' + unit + '</p></td></tr>');
+					$('#sensorTable tr:last').after('<tr onclick="openPopup(' + item.id + ', \'' + item.name + '\')"><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value + ' ' + unit + '</p></td></tr>');
 
 					sensors.append('<option value="' + item.id + '">' + item.name + '</option>');
 					break;
@@ -363,11 +402,11 @@ th {
 						buttonText = "Einschalten";
 					}
 
-					$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="button" class="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
+					$('#actorTable tr:last').after('<tr><td onclick="openPopup(' + item.id + ', \'' + item.name + '\')">' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="button" class="button" value="' + buttonText + '" onclick="digitalAction(' + item.id + ', ' + value + ')" id="btn'+ item.id +'"></td></tr>');
 					break;
 
 				case "AnalogActor":
-					$('#actorTable tr:last').after('<tr><td>' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="analog' + item.id + '" value="' + item.currentValue.value + '"><input type="button"  class="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
+					$('#actorTable tr:last').after('<tr><td onclick="openPopup(' + item.id + ', \'' + item.name + '\')">' + item.name + '</td><td>' + '<p id=\'thing' + item.id + '\'>' + item.currentValue.value +'</p></td><td><input type="range" min="0" max="100" id="analog' + item.id + '" value="' + item.currentValue.value + '"><input type="button"  class="button" value="Absenden" onclick="analogAction(' + item.id + ')"></td></tr>');
 					break;
 			}
 		});
@@ -585,9 +624,9 @@ th {
 		fillCondtionAndAction();
 	}
 
-	function getAndDisplayDataInChart() {
-		$.getJSON(baseUrl + '/thing/1', function(result) {
-			console.log(result);
+	function getAndDisplayDataInChart(thingId, name) {
+		$.getJSON(baseUrl + '/thing/' + thingId, function(result) {
+			console.log(thingId);
 
 			var data = [['Zeit', 'Wert']];
 
@@ -595,7 +634,7 @@ th {
 				data.push([new Date(item.time), parseFloat(item.value)]);
 			});
 
-			drawChart(data, 'Temperatur');
+			drawChart(data, name);
 		});
 
 	}
@@ -609,11 +648,17 @@ th {
 				$('#content').show();
 				getThings();
 				connectWS();
-				getAndDisplayDataInChart();
 			}
 		});
 	}
 	</script>
+
+	<div id="popup" class="modal">
+	<div class="modal-content">
+			<span class="close">&times;</span>
+			<div id="curve_chart" style="width: 900px; height: 500px"></div>
+		</div>
+	</div>
 
 	<div id="loginForm">
 		<form action="javascript:submit()">
@@ -670,7 +715,26 @@ th {
 		</div>
 		<br>
 	</div>
-	<br>
-	<div id="curve_chart" style="width: 900px; height: 500px"></div>
+
+	<script>
+
+	var popup = document.getElementById('popup');
+	var span = document.getElementsByClassName("close")[0];
+
+	function openPopup(thingId, name) {
+		popup.style.display = "block";
+		getAndDisplayDataInChart(thingId, name);
+	}
+
+	span.onclick = function() {
+		popup.style.display = "none";
+	}
+
+	window.onclick = function(event) {
+		if (event.target == popup) {
+			popup.style.display = "none";
+		}
+	}
+	</script>
 </body>
 </html>
