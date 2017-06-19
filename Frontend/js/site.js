@@ -485,7 +485,7 @@ function getAndDisplayDataInChart(thingId, name) {
 		var data = [['Zeit', 'Wert']];
 
 		$.each(result, function(i, item) {
-			data.push([new Date(item.time), parseFloat(item.value)]);
+			data.push([new Date(item.time * 1000.0), parseFloat(item.value)]);
 		});
 
 		drawChart(data, name);
