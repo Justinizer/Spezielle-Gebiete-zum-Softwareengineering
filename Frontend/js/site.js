@@ -1,7 +1,7 @@
 //var backendip = "127.0.0.1:8080/SHP-Web";
-var backendip = "192.168.1.1:8080/SHP-Web"
+var backendip = "192.168.1.1:8080/SHP-Web/"
 //var backendip = window.location.host  + window.location.pathname;
-var baseUrl ="http://" + backendip + "/rest/gui";
+var baseUrl ="http://" + backendip + "rest/gui";
 var conditionRowId = 0;
 var actionRowId = 0;
 var newAutomationId = 0;
@@ -22,9 +22,7 @@ function onMessage(event){
 	var jdata = JSON.parse(event.data);
 	var element = document.getElementById('thing' + jdata.id);
 
-	var unit = (jdata.unit == "null") ? "" : jdata.unit;
-
-	element.innerHTML  = jdata.value + ' ' + unit;
+	element.innerHTML  = jdata.value;
 	element.style.background = "red";
 
 	setTimeout(function() {
@@ -349,9 +347,9 @@ function saveAutomation(automationObj) {
 	if ('id' in automationObj) {
 		actionUrl = "";
 		param.automationid = automationObj.id;
-		param.active = automationObj.active;
+		
 	}
-
+	param.active = automationObj.active;
 	$.post(baseUrl + "/automation" + actionUrl, param, function(answer) {
 		var newAutoId;
 
@@ -481,8 +479,8 @@ function deleteAutomation(){
 }
 
 function getAndDisplayDataInChart(thingId, name) {
-	$.getJSON(baseUrl + '/thing/' + thingId + '/7', function(result) {
-		console.log(result);
+	$.getJSON(baseUrl + '/thing/' + thingId, function(result) {
+		console.log(thingId);
 
 		var data = [['Zeit', 'Wert']];
 
@@ -495,14 +493,6 @@ function getAndDisplayDataInChart(thingId, name) {
 
 }
 
-function loadWeather() {
-	$.getJSON(baseUrl + '/weather', function(result) {
-		var element = document.getElementById('weatherIcon');
-
-		element.src = result.img;
-	});
-}
-
 function submit() {
 	var email = $('#email').val();
 	var password = $('#password').val();
@@ -512,7 +502,6 @@ function submit() {
 			$('#content').show();
 			getThings();
 			connectWS();
-			loadWeather();
 		}
 	});
 }
