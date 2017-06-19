@@ -113,8 +113,9 @@ public interface HomeBeanRemote {
 	/** 
 	 * add a new Automation to the DB
 	 * @param automationName
+	 * @param active 
 	 */
-	public Automation addAutomation(String automationName);
+	public Automation addAutomation(String automationName, boolean active);
 	
 	/**
 	 * add a condition to a automation. The automation is set in the condition object
