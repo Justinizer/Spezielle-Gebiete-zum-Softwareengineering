@@ -22,7 +22,9 @@ function onMessage(event){
 	var jdata = JSON.parse(event.data);
 	var element = document.getElementById('thing' + jdata.id);
 
-	element.innerHTML  = jdata.value + ' ' + jdata.unit;
+	var unit = (jdata.unit == "null") ? "" : jdata.unit;
+
+	element.innerHTML  = jdata.value + ' ' + unit;
 	element.style.background = "red";
 
 	setTimeout(function() {
@@ -493,6 +495,14 @@ function getAndDisplayDataInChart(thingId, name) {
 
 }
 
+function loadWeather() {
+	$.getJSON(baseUrl + '/weather', function(result) {
+		var element = document.getElementById('weatherIcon');
+
+		element.src = result.img;
+	});
+}
+
 function submit() {
 	var email = $('#email').val();
 	var password = $('#password').val();
@@ -502,6 +512,7 @@ function submit() {
 			$('#content').show();
 			getThings();
 			connectWS();
+			loadWeather();
 		}
 	});
 }
