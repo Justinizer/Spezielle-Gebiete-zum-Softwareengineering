@@ -1,7 +1,7 @@
 //var backendip = "127.0.0.1:8080/SHP-Web";
-var backendip = "192.168.1.1:8080/SHP-Web"
+var backendip = "192.168.1.1:8080/SHP-Web/"
 //var backendip = window.location.host  + window.location.pathname;
-var baseUrl ="http://" + backendip + "/rest/gui";
+var baseUrl ="http://" + backendip + "rest/gui";
 var conditionRowId = 0;
 var actionRowId = 0;
 var newAutomationId = 0;
@@ -347,9 +347,9 @@ function saveAutomation(automationObj) {
 	if ('id' in automationObj) {
 		actionUrl = "";
 		param.automationid = automationObj.id;
-		param.active = automationObj.active;
+		
 	}
-
+	param.active = automationObj.active;
 	$.post(baseUrl + "/automation" + actionUrl, param, function(answer) {
 		var newAutoId;
 
