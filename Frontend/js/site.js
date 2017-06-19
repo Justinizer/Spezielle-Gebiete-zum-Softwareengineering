@@ -22,7 +22,7 @@ function onMessage(event){
 	var jdata = JSON.parse(event.data);
 	var element = document.getElementById('thing' + jdata.id);
 
-	element.innerHTML  = jdata.value;
+	element.innerHTML  = jdata.value + ' ' + jdata.unit;
 	element.style.background = "red";
 
 	setTimeout(function() {
@@ -479,8 +479,8 @@ function deleteAutomation(){
 }
 
 function getAndDisplayDataInChart(thingId, name) {
-	$.getJSON(baseUrl + '/thing/' + thingId, function(result) {
-		console.log(thingId);
+	$.getJSON(baseUrl + '/thing/' + thingId + '/7', function(result) {
+		console.log(result);
 
 		var data = [['Zeit', 'Wert']];
 
