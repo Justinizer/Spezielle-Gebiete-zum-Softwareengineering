@@ -1,6 +1,7 @@
 package rest;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import javax.ejb.EJB;
@@ -182,6 +183,35 @@ bh.test();
 			inner.put("value", s.getValue());
 			inner.put("id", s.getId());
 			json.put(inner);
+		}
+		return json.toString();
+	}
+	
+	/**
+	 * get all sensor data for a specific thing
+	 * 
+	 * @param id
+	 *            the id of the thing
+	 * @return all the data
+	 */
+	@Produces("application/json")
+	@GET
+	@Path("thing/{id}/{days}")
+	public String getSensorDataTime(@PathParam("id") int id,@PathParam("days") int days) {
+		JSONArray json = new JSONArray();
+		long now = new Date().getTime();
+		/* ms per day */
+		long offset =(now/1000) - (86400 * days);
+		System.out.println(offset);
+		for (SensorData s : bh.getAllDataForThing(id)) {
+			System.out.println("sensor " +s.getTime());
+			if(s.getTime() >offset){
+				JSONObject inner = new JSONObject();
+				inner.put("time", s.getTime());
+				inner.put("value", s.getValue());
+				inner.put("id", s.getId());
+				json.put(inner);
+			}
 		}
 		return json.toString();
 	}
