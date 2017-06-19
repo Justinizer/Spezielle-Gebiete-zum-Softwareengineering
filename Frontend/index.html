@@ -173,7 +173,14 @@ th {
 	
 	function onMessage(event){
 		var jdata = JSON.parse(event.data);
-		document.getElementById('thing' + jdata.id).innerHTML  = jdata.value;
+		var element = document.getElementById('thing' + jdata.id);
+
+		element.innerHTML  = jdata.value;
+		element.style.background = "red";
+
+		setTimeout(function() {
+			element.style.background = "none";
+		}, 2000);
 
 		if(jdata.type == "DigitalActor") {
 			if(jdata.value == '1'){
