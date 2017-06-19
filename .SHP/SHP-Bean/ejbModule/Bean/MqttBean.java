@@ -86,21 +86,24 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			List<Thing> thingsList = (List<Thing>) em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
 
 			/* create and connect the mqttclient */
-			client = new MqttClient("tcp://" + sc.getMqttServer(), "SHP" + new Random().nextInt(500000));
-			client.connect();
-			client.setCallback(this);
-
-			/* subscribe to all necessary topics */
-			for (Thing t : thingsList) {
-				things.put(t.getMqttTopic(), t);
-				client.subscribe(t.getMqttTopic());
+			if(client == null){
+				client = new MqttClient("tcp://" + sc.getMqttServer(), "SHP" + new Random().nextInt(500000));
+				client.connect();
+				client.setCallback(this);
+	
+				/* subscribe to all necessary topics */
+				for (Thing t : thingsList) {
+					things.put(t.getMqttTopic(), t);
+					client.subscribe(t.getMqttTopic());
+				}
+				
+	
+				System.out.println("!!!!CONNECTED!!!!");
 			}
-
-			System.out.println("!!!!CONNECTED!!!!");
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
 			System.out.println("!!!!MQTT EXCEPTION!!!!");
-			e.printStackTrace();
+			System.out.println(e.toString());
 		}
 
 	}
@@ -170,8 +173,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		try {
 			hb.addData(data);
 		} catch (Exception e) {
-			System.out.println("MQTT BEAN:");
-			e.printStackTrace();
+			System.out.println("MQTT BEAN: " + e.toString());
 		}		
 
 		handleWSSessions(databaseThing, data);
@@ -187,7 +189,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			System.out.println("affected: " + a.getName());
 			if (a.fulfilled(data.getValue(), topic)) {
 				/* conditions are fulfilled: FIRE the actions */
-				System.out.println(a.getName() + "  firing!");
+				//System.out.println(a.getName() + "  firing!");
 				for (Action action : a.getActions()) {
 					publish(action.getThing().getMqttTopic(), action.getValue());
 				}
@@ -209,7 +211,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		
 		for (Session s : clientSessions){
 			try {
-				s.getBasicRemote().sendText("{\"id\":" + databaseThing.getId() + ", \"value\": \"" + data.getValue() + "\", \"type\":\"" + databaseThing.getType() + "\"}");
+				s.getBasicRemote().sendText("{\"id\":" + databaseThing.getId() + ", \"value\": \"" + data.getValue() + "\", \"type\":\"" + databaseThing.getType() + "\", \"unit\": \"" + databaseThing.getUnit() + "\"}");
 			} catch (IOException e) {
 				toDelete.add(s);
 			}
@@ -237,7 +239,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			}
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("MQTTBEAN CHECKMQTTCLIENT " + e.toString());
 		}
 		return client.isConnected();
 	}
@@ -284,10 +286,11 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 		}
 		try {
 			client.publish(t, new MqttMessage(message.getBytes()));
-			System.out.println("done");
+			//System.out.println("done");
 			return true;
 		} catch (MqttException e) {
-			e.printStackTrace();
+			System.out.println("MQTT BEAN PUBLISH FAILED" + e.toString());
+			//e.printStackTrace();
 		}
 		return false;
 	}

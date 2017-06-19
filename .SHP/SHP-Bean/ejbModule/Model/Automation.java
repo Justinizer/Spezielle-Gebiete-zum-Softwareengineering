@@ -93,18 +93,18 @@ public class Automation implements Serializable {
 		}
 		
 		boolean allTrue = true;
-		System.out.println("in automation " + id + " conditions:" + conditions.size());
+		//System.out.println("in automation " + id + " conditions:" + conditions.size());
 		
 		/* check all conditions of the automation */
 		for(Condition c:conditions){
-			System.out.println("checking condition " + c.getId());
+			//System.out.println("checking condition " + c.getId());
 			
 			/* if one condition is not fulfilled, the whole automation is NOT */
 			if(!c.fulfills(newValue, topic)){
-				System.out.println("is NOT fulfilled");
+				//System.out.println("is NOT fulfilled");
 				allTrue = false;
 			} else {
-				System.out.println("is fulfilled");
+				//System.out.println("is fulfilled");
 			}
 			
 		}
@@ -113,7 +113,7 @@ public class Automation implements Serializable {
 		if(allTrue){
 			System.out.println("AUTOMATION FULFILLED! WILL FIRE!");
 		} else {
-			System.out.println("Automation NOT fulfilled");
+			//System.out.println("Automation NOT fulfilled");
 		}
 		
 		
