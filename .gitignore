@@ -1,6 +1,8 @@
 
 # Created by https://www.gitignore.io/api/c,c++,java,linux,python,windows
 
+# Jonas schreibt sich ohne h
+
 ### C ###
 # Prerequisites
 *.d
