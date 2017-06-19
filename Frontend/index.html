@@ -3,6 +3,34 @@
 <meta charset="UTF-8">
 <title>SHP</title>
 <script src="js/jquery.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+  google.charts.load('current', {'packages':['corechart']});
+  //google.charts.setOnLoadCallback(drawChart);
+   /* var data = google.visualization.arrayToDataTable([
+      ['Year', 'Sales', 'Expenses'],
+      ['2004',  1000,      400],
+      ['2005',  1170,      460],
+      ['2006',  660,       1120],
+      ['2007',  1030,      540]
+    ]);*/
+
+  function drawChart(data, title) {
+  	data = google.visualization.arrayToDataTable(data);
+
+    var options = {
+      title: title,
+      curveType: 'function',
+      explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 4.0},
+      legend: { position: 'bottom' }
+    };
+
+    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+    chart.draw(data, options);
+  }
+</script>
+
 <style>
 table {
 	border-collapse: collapse;
@@ -54,7 +82,6 @@ th {
 	border: 1px solid black;
 	margin-right: 10px;
 	margin-bottom: 10px;
-}
 }
 
 #tbAction {
@@ -558,6 +585,21 @@ th {
 		fillCondtionAndAction();
 	}
 
+	function getAndDisplayDataInChart() {
+		$.getJSON(baseUrl + '/thing/1', function(result) {
+			console.log(result);
+
+			var data = [['Zeit', 'Wert']];
+
+			$.each(result, function(i, item) {
+				data.push([new Date(item.time), parseFloat(item.value)]);
+			});
+
+			drawChart(data, 'Temperatur');
+		});
+
+	}
+
 	function submit() {
 		var email = $('#email').val();
 		var password = $('#password').val();
@@ -567,6 +609,7 @@ th {
 				$('#content').show();
 				getThings();
 				connectWS();
+				getAndDisplayDataInChart();
 			}
 		});
 	}
@@ -627,6 +670,7 @@ th {
 		</div>
 		<br>
 	</div>
-
+	<br>
+	<div id="curve_chart" style="width: 900px; height: 500px"></div>
 </body>
 </html>
