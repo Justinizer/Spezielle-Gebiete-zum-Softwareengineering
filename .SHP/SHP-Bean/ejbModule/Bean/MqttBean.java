@@ -24,6 +24,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
@@ -64,49 +65,62 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	}
 
 	/**
+	 * called at the startup of the Server
 	 * Initializes the mqtt client and connects to all topics
 	 */
 	@PostConstruct
 	public void init() {
 		System.out.println("----> MQTT BEAN STARTED <----");
-
+		buildTopicAutomationMap();
 		/* get the mqtt conifg */
 		SystemConfig sc = hb.getSystemConfig();
-		System.out.println(sc.getMqttServer());
+		System.out.println(sc.getMqttServer());		
 
-		@SuppressWarnings("unchecked")
-		List<Automation> autolist = em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();
-
-		/* build the map (topic -> automations) */
-		autos = buildTopicAutomationMap(autolist);
 		try {
-
-			/* get all things form the database */
-			@SuppressWarnings("unchecked")
-			List<Thing> thingsList = (List<Thing>) em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
-
-			/* create and connect the mqttclient */
-			if(client == null){
-				client = new MqttClient("tcp://" + sc.getMqttServer(), "SHP" + new Random().nextInt(500000));
-				client.connect();
-				client.setCallback(this);
-	
-				/* subscribe to all necessary topics */
-				for (Thing t : thingsList) {
-					things.put(t.getMqttTopic(), t);
-					client.subscribe(t.getMqttTopic());
-				}
-				
-	
-				System.out.println("!!!!CONNECTED!!!!");
-			}
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			System.out.println("!!!!MQTT EXCEPTION!!!!");
-			System.out.println(e.toString());
+			client = connectMQTT(sc);
+			connectTopics();				
+			
+		} catch (MqttException e) {			
+			e.printStackTrace();
+			System.out.println("MQTT BEAN START: " + e.toString()); 
 		}
-
+	
+		
 	}
+	
+	/**
+	 * connect a new mqtt client to the broker, and register the callback
+	 * @param sc the broker ip
+	 * @return the connected client
+	 * @throws MqttException
+	 */
+	private MqttClient connectMQTT(SystemConfig sc) throws MqttException{			
+		
+		MqttClient client = new MqttClient("tcp://" + sc.getMqttServer(), "SHP" + new Random().nextInt(500000));
+		client.connect();
+		client.setCallback(this);
+		System.out.println("!!!!CONNECTED!!!!");		
+		return client;		
+		
+	}
+	
+	/**
+	 * loads all topics from the DB and connects the "client" to them
+	 * @throws MqttException
+	 */
+	private void connectTopics() throws MqttException{		
+		@SuppressWarnings("unchecked")
+		List<Thing> thingsList = (List<Thing>) em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
+		things.clear();		
+		for (Thing t : thingsList) {			
+			things.put(t.getMqttTopic(), t);
+			client.subscribe(t.getMqttTopic());
+				
+		}
+	}
+	
+	
+	
 
 	public void testi() {
 		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
@@ -117,11 +131,10 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	 * connected to at least one automation that needs to be checked, when new
 	 * data is available on that topic
 	 * 
-	 * @param autolist
-	 *            list of all automations
-	 * @return
 	 */
-	private Map<String, List<Automation>> buildTopicAutomationMap(List<Automation> autolist) {
+	private void buildTopicAutomationMap() {
+		@SuppressWarnings("unchecked")
+		List<Automation> autolist = em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();
 		Map<String, List<Automation>> map = new HashMap<String, List<Automation>>();
 
 		/* loop all conditions in all automations */
@@ -152,7 +165,7 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 				}
 			}
 		}
-		return map;
+		autos = map;
 	}
 
 	/**
@@ -302,7 +315,12 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	 */
 	@Override
 	public void reloadAutomations() {
-		init();
+		buildTopicAutomationMap();
+		try {
+			connectTopics();
+		} catch (MqttException e) {
+			
+		}	
 	}
 
 }
