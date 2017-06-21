@@ -107,7 +107,7 @@ public class Condition implements Serializable {
 			thing.addData(newValue);
 		} else {
 			/* topic is not matching, return last Status */
-			System.out.println("topic is different, returning lastStatus");
+			//System.out.println("topic is different, returning lastStatus");
 
 			return lastFulfillmentStatus;
 

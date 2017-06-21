@@ -256,11 +256,12 @@ public class HomeBean implements HomeBeanRemote {
 	 * @see Interface.HomeBeanRemote#addAutomation(java.lang.String)
 	 */
 	@Override
-	public Automation addAutomation(String automationName) {
+	public Automation addAutomation(String automationName,boolean active) {
 		if (!isLoggedin) {
 			return null;
 		}
 		Automation auto = new Automation(automationName);
+		auto.setActive(active);
 		em.persist(auto);
 		em.flush();
 		mb.reloadAutomations();

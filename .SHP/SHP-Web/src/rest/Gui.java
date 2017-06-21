@@ -293,8 +293,9 @@ bh.test();
 	@Produces("application/json")
 	@POST
 	@Path("automation/create")
-	public String addAutomations(@FormParam("name") String autoname) {
-		Automation a= bh.addAutomation(autoname);
+	public String addAutomations(@FormParam("name") String autoname, @FormParam("active") boolean active ) {
+		Automation a= bh.addAutomation(autoname,active);
+		System.out.println(active);
 		if(a != null){
 			return helper.getOneAutomation(a).put("status", "successful").toString();
 		}
