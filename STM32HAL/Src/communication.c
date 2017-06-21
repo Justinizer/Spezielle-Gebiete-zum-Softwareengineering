@@ -3,16 +3,16 @@
 #include "stm32f1xx_hal_uart.h"
 #include <string.h>
 
-#define TRANSMIT_BUFFER_SIZE	30
+#define TRANSMIT_BUFFER_SIZE	35
 
 extern UART_HandleTypeDef huart1;
 extern uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
 
 
-void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity) {
+void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity, int moisture) {
 	char buffer[TRANSMIT_BUFFER_SIZE];
 
-	snprintf(buffer, TRANSMIT_BUFFER_SIZE, "%d;%d;%d;%d\n", pm2_5, pm10, temperature, humidity);
+	snprintf(buffer, TRANSMIT_BUFFER_SIZE, "%d;%d;%d;%d;%d\n", pm2_5, pm10, temperature, humidity, moisture);
 
 	HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 1000);
 }
