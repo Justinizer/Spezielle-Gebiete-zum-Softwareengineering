@@ -6,13 +6,32 @@
 #include <syslog.h>
 #include <stdio.h>
 #include <errno.h>
-#include "serial.h"
+#include <stdint.h>
 #include "daemonize.h"
 #include "commands.h"
+#include "serial.h"
 #include "mqtt.h"
 
-static const char *VALUE_NAMES[] = {"/garten/pm2_5", "/garten/pm10", "/wohnzimmer/temperatur", "/wohnzimmer/feuchtigkeit", "/wohnzimmer/bodenfeuchte"};
-static const int VALUE_NAMES_LEN = sizeof(VALUE_NAMES) / sizeof(VALUE_NAMES[0]);
+#define RECEIVE_BUFFER_SIZE	20
+
+typedef struct {
+	const char *topic;
+	const char *value_name;
+	const char *unit;
+	uint8_t div_by_10;
+	uint8_t value_is_float;
+} sensor_t;
+
+static const sensor_t SENSORS[] = {
+//	topic						value_name			unit		div_by_10	value_is_float
+	{"/garten/pm2_5",			"Feinstaub 2,5µm",	"µg/m³",	1,			1},
+	{"/garten/pm10",			"Feinstaub 10µm",	"µg/m³",	1,			1},
+	{"/wohnzimmer/temperatur",	"Temperatur",		"°C",		1,			1},
+	{"/wohnzimmer/feuchtigkeit","Luftfeuchte",		"%rF",		1, 			1},
+	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		0, 			0}
+};
+
+static const size_t SENSOR_SIZE = sizeof(SENSORS) / sizeof(SENSORS[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
 static const char *CLIENT_ID = "stm32driver";
 const char *BRIGHTNESS_TOPIC = "/wohnzimmer/led/rot";
@@ -31,7 +50,7 @@ static const struct option program_options[] = {
 //	name				has_arg				flag	val
 	{"broker-address",	required_argument,	NULL,	'b'},
 	{"daemonize",		no_argument, 		NULL,	'd'},
-	{"get-data", 		no_argument, 		NULL,	'g'},
+	{"get-data",		no_argument, 		NULL,	'g'},
 	{"help",			no_argument, 		NULL,	'h'},
 	{"publish",			no_argument,		NULL,	'p'},
 	{"raw",				no_argument, 		NULL,	'r'},
@@ -40,8 +59,7 @@ static const struct option program_options[] = {
 };
 
 static void print_help(const char *progname);
-static int get_and_print_data(int publish);
-static int send_values(MQTTClient *client, const char *data);
+static int get_and_print_data(int publish, int print, int printRaw);
 
 int main(int argc, char *argv[]) {
 	int optionIndex;
@@ -99,7 +117,7 @@ int main(int argc, char *argv[]) {
 
 
 	if (getDataFlag || publishFlag) {
-		return get_and_print_data(publishFlag);
+		return get_and_print_data(publishFlag, 1, printDataRawFlag);
 	}
 
 	if (setBrightnessFlag) {
@@ -112,7 +130,6 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-		char buffer[20];
 		result = open_mqtt_connection(&client, broker_address, CLIENT_ID);
 		if (result == 1) {
 			syslog(LOG_ERR, "Error connecting to broker. Shutting down.");
@@ -130,8 +147,7 @@ int main(int argc, char *argv[]) {
 
 
 		while (1) {
-			get_data(buffer, 20);
-			send_values(&client, buffer);
+			get_and_print_data(1, 0, 0);
 			syslog(LOG_INFO, "Publishing data.");
 
 			sleep(60);	// Wait 5 mins
@@ -158,71 +174,52 @@ static void print_help(const char *progname) {
 	printf("  -s, --set-brightness <value>    Set brightness to <value>\n\n");
 }
 
-static int get_and_print_data(int publish) {
-	char buffer[20];
+static int get_and_print_data(int publish, int print, int printRaw) {
+	char *currentValuePtr;
+	const char *unit;
+	size_t index = 0;
+	char buffer[RECEIVE_BUFFER_SIZE];
+	float value;
 
-	if (get_data(buffer, 20) == 1) {
+	if (get_data(buffer, RECEIVE_BUFFER_SIZE) == 1) {
 		return 1;
 	}
 
-	if (printDataRawFlag) {
+	if (print && printRaw) {
 		printf("%s\n", buffer);
 
-	} /*else {
-		float pm2_5, pm10;
-		float temperature;
-		float humidity;
-
-		parse_data_string(buffer, &pm2_5, &pm10, &temperature, &humidity);
-
-		printf("PM 2,5µm:    %4.1f µg/m³\n", pm2_5);
-		printf("PM 10µm :    %4.1f µg/m³\n", pm10);
-		printf("Temperature: %4.1f °C\n", temperature);
-		printf("Humidity:    %4.1f %%rF\n", humidity);
-	}*/
+	} 
 
 	if (publish) {
 		open_mqtt_connection(&client, broker_address, CLIENT_ID);
-		send_values(&client, buffer);
-		close_mqtt_connection(&client);
-	}
-
-	return 0;
-}
-
-static int send_values(MQTTClient *client, const char *data) {
-	char *valueStringBuffer;
-	char *currentValuePtr;
-	size_t index = 0;
-	float value;
-
-	if (!client || !data) {
-		return 1;
 	}
 
 
-	valueStringBuffer = strdup(data);
-	if (!valueStringBuffer) {
-		printf("Error duplicating data string: %s\n", strerror(errno));
-		return 1;
-	}
-
-
-	currentValuePtr = strtok(valueStringBuffer, ";");
-	while (currentValuePtr && index < VALUE_NAMES_LEN) {
+	currentValuePtr = strtok(buffer, ";");
+	while (currentValuePtr && index < SENSOR_SIZE) {
 
 		sscanf(currentValuePtr, "%f", &value);
-		value /= 10.0f;
 
-		mqtt_send_value(client, VALUE_NAMES[index], value);
+		if (SENSORS[index].div_by_10) {
+			value /= 10.0f;
+		}
+
+		if (print && !printRaw) {
+			unit = (SENSORS[index].unit) ? SENSORS[index].unit : "";
+			printf("%s: %4.*f %s\n", SENSORS[index].value_name, SENSORS[index].value_is_float, value, unit);
+		}
+
+		if (publish) {
+			mqtt_send_value(client, SENSORS[index].topic, value);
+		}
 
 		currentValuePtr = strtok(NULL, ";");
 		index++;
 	}
 
-
-	free(valueStringBuffer);
+	if (publish) {
+		close_mqtt_connection(&client);
+	}
 
 	return 0;
 }
-
