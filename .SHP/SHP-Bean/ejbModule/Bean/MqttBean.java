@@ -122,9 +122,6 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	
 	
 
-	public void testi() {
-		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
-	}
 
 	/**
 	 * builds a map - mqtt topic to automation each subscribed mqtt topic is
@@ -322,5 +319,10 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			
 		}	
 	}
+	
+	public void testi() {
+		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
+	}
+
 
 }

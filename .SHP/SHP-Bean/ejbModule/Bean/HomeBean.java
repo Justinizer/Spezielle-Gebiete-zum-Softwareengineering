@@ -460,6 +460,41 @@ public class HomeBean implements HomeBeanRemote {
 	public Weather getWeather(){
 		return new Weather(52.2959618,8.9040964);
 	}
+	
+	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#addThing(java.lang.String, java.lang.String, Model.ThingType, java.lang.String)
+	 */
+	public Thing addThing(String name, String mqttTopic, ThingType type, String unit){
+		if(!isLoggedin){
+			return null;
+		}
+		Thing newThing = new Thing();
+		newThing.setName(name);
+		newThing.setMqttTopic(mqttTopic);
+		newThing.setType(type);
+		newThing.setUnit(unit);
+		em.persist(newThing);
+		em.flush();
+		mb.reloadAutomations();
+		return newThing;
+	}
+	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#deleteThing(int)
+	 */
+	public boolean deleteThing(int Thingid){
+		if(!isLoggedin){
+			return false;
+		}
+
+		Thing toDel= em.find(Thing.class, Thingid);
+		if(toDel == null){
+			return false;
+		}
+		em.remove(toDel);
+		return true;
+	}
 
 
 

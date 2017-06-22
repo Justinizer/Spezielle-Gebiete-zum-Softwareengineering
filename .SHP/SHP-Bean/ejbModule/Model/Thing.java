@@ -107,6 +107,8 @@ public class Thing implements Serializable {
 	public void setUnit(String unit) {
 		this.unit = unit;
 	}
-	
+	public void setType(ThingType t){
+		type = t;
+	}
 	
 }

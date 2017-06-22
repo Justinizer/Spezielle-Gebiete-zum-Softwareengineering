@@ -132,15 +132,8 @@ bh.test();
 		if (things == null) {
 			return helper.getFail().toString();
 		}
-		for (Thing t : things) {
-			JSONObject inner = new JSONObject();
-			inner.put("id", t.getId());
-			inner.put("type", t.getType());
-			inner.put("name", t.getName());
-			inner.put("unit", t.getUnit());
-			inner.put("mqtttopic", t.getMqttTopic());
-			inner.put("currentValue", helper.getCurrentValue(t));
-			json.put(inner);
+		for (Thing t : things) {			
+			json.put(helper.thingToJson(t));
 		}
 
 		return json.toString();
@@ -498,6 +491,33 @@ bh.test();
 		
 		
 	}
+	
+	
+	@Produces("application/json")
+	@POST
+	@Path("thing/add")
+	public String addThing(@FormParam("name") String name,
+			@FormParam("mqttTopic") String mqttTopic, @FormParam("type") int iType,@FormParam("unit") String unit) {
+		ThingType tt = ThingType.getByIndex(iType);
+		Thing t =bh.addThing(name, mqttTopic, tt, unit);
+		if(t == null){
+			return helper.getFail().toString();
+		}
+		return helper.thingToJson(t).toString();
+		
+	}
+	
+	@Produces("application/json")
+	@DELETE
+	@Path("thing/{thingid}")
+	public String deleteThing(@PathParam("thingid") int thingid) {
+
+		if(bh.deleteThing(thingid)){
+			return helper.getSuccess().toString();
+		}
+		return helper.getFail().toString();
+	}
+	
 	
 
 }

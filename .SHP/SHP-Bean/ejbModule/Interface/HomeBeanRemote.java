@@ -12,6 +12,7 @@ import Model.ConditionType;
 import Model.SensorData;
 import Model.SystemConfig;
 import Model.Thing;
+import Model.ThingType;
 
 /**
  * @author Jonas
@@ -164,7 +165,9 @@ public interface HomeBeanRemote {
 	 */
 	public Weather getWeather();
 	
+	public Thing addThing(String name, String mqttTopic, ThingType type, String unit);
 	
+	public boolean deleteThing(int Thingid);
 	
 	
 }

@@ -85,4 +85,15 @@ public class GuiHelper {
 		}
 		return json;
 	}
+	
+	public JSONObject thingToJson(Thing t){
+		JSONObject inner = new JSONObject();
+		inner.put("id", t.getId());
+		inner.put("type", t.getType());
+		inner.put("name", t.getName());
+		inner.put("unit", t.getUnit());
+		inner.put("mqtttopic", t.getMqttTopic());
+		inner.put("currentValue", getCurrentValue(t));
+		return inner;
+	}
 }
