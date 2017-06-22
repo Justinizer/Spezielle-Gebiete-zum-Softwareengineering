@@ -41,6 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "communication.h"
+#include "moisture.h"
 #include "sds011.h"
 #include "dht22.h"
 
@@ -54,6 +55,8 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
@@ -66,7 +69,7 @@ uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
 volatile uint8_t pc_command_received_flag;
 volatile uint8_t pc_command_byte;
 
-uint16_t sensor_value_buffer[NUMBER_OF_MEASUREMENTS][4];
+uint16_t sensor_value_buffer[NUMBER_OF_MEASUREMENTS][5];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,7 +77,9 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_TIM2_Init(void);                                    
+static void MX_TIM2_Init(void);
+static void MX_ADC1_Init(void);
+                                    
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
 
@@ -91,10 +96,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	uint16_t pm2_5 = 0;
-	uint16_t pm10 = 0;
-	uint16_t temp = 0;
-	uint16_t hum = 0;
+	uint32_t pm2_5 = 0;
+	uint32_t pm10 = 0;
+	uint32_t temp = 0;
+	uint32_t hum = 0;
+  uint32_t moisture = 0;
 	uint8_t state = STATE_WAKEUP_PARTICLE_SENSOR;
 	int timestamp = 0;
 	int measurements = 0;
@@ -121,6 +127,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
+  MX_ADC1_Init();
 
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart1, uart2_receive_buffer, 1);
@@ -137,13 +144,12 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
-		// Echo pc command
 		if (pc_command_received_flag) {
 			pc_command_received_flag = 0;
 
 			switch (pc_command[1]) {
 				case GET_SENSOR_VALUES:
-					transmit_data_to_pc(pm2_5, pm10, temp, hum);
+					transmit_data_to_pc(pm2_5, pm10, temp, hum, moisture);
 					break;
 
 				case SET_BRIGHTNESS:
@@ -173,6 +179,7 @@ int main(void)
 			case STATE_GET_SENSOR_DATA_LOOP:
 				sds011_get_sensor_data(&huart2, &(sensor_value_buffer[measurements][0]), &(sensor_value_buffer[measurements][1]));
 				dht22_get_data(DHT22_PORT, DHT22_PIN, &(sensor_value_buffer[measurements][2]), &(sensor_value_buffer[measurements][3]));
+        sensor_value_buffer[measurements][4] = get_soil_moisture(&hadc1);
 				measurements++;
 				timestamp = HAL_GetTick();
 
@@ -184,18 +191,21 @@ int main(void)
 
 					pm2_5 = 0; pm10 = 0;
 					temp = 0; hum = 0;
+          moisture = 0;
 					int i;
 					for (i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
 						pm2_5 += sensor_value_buffer[i][0];
 						pm10 += sensor_value_buffer[i][1];
 						temp += sensor_value_buffer[i][2];
 						hum += sensor_value_buffer[i][3];
+            moisture += sensor_value_buffer[i][4];
 					}
 
 					pm2_5 /= NUMBER_OF_MEASUREMENTS;
 					pm10 /= NUMBER_OF_MEASUREMENTS;
 					temp /= NUMBER_OF_MEASUREMENTS;
 					hum /= NUMBER_OF_MEASUREMENTS;
+          moisture /= NUMBER_OF_MEASUREMENTS;
 
 					state = STATE_WAIT_MAIN_LOOP;
 				}
@@ -226,6 +236,7 @@ void SystemClock_Config(void)
 
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
+  RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
@@ -255,6 +266,13 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV4;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
     /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
@@ -265,6 +283,38 @@ void SystemClock_Config(void)
 
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+}
+
+/* ADC1 init function */
+static void MX_ADC1_Init(void)
+{
+
+  ADC_ChannelConfTypeDef sConfig;
+
+    /**Common config 
+    */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
 }
 
 /* TIM2 init function */
@@ -367,6 +417,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
 }
 
