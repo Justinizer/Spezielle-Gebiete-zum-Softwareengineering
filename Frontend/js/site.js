@@ -21,7 +21,10 @@ var automation;
 function onMessage(event){
 	var jdata = JSON.parse(event.data);
 	var element = document.getElementById('thing' + jdata.id);
-
+	if(jdata.type == "CameraSensor"){
+		openPopupImage(jdata.id, baseUrl + "/image/" + jdata.id);
+		return;
+	}
 	element.innerHTML  = jdata.value + " " + jdata.unit;
 	element.style.background = "red";
 
@@ -41,7 +44,7 @@ function onMessage(event){
 
 	} else if(jdata.type == "AnalogActor"){
 		document.getElementById('analog' + jdata.id).value  = jdata.value;
-	}
+	} 
 }
 
 function connectWS(){

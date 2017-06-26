@@ -14,7 +14,7 @@
 
 	var options = {
 	  title: title,
-	 // curveType: 'function',
+	  curveType: 'function',
 	  explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 4.0},
 	  legend: { position: 'bottom' }
 	};
@@ -30,7 +30,7 @@
 	<div id="popup" class="modal">
 		<div class="modal-content">
 			<span class="close">&times;</span>
-			<div id="curve_chart" style="width: 900px; height: 500px; margin: auto;"></div>
+			<div id="curve_chart" style="width: 900px; height: 500px"></div>
 		</div>
 	</div>
 
@@ -96,17 +96,32 @@
 	var span = document.getElementsByClassName("close")[0];
 
 	function openPopup(thingId, name) {
-		popup.style.display = "block";
+		popup.style.display = "block";		
 		getAndDisplayDataInChart(thingId, name);
+	}
+
+	function openPopupImage(thingId, imageUrl){
+		$('#curve_chart').empty();
+		popup.style.display = "block";
+		d = new Date();
+		imageUrl += "?"+d.getTime();
+		$('#curve_chart').css("background-image", "url("+ imageUrl + ")");  	
+		
+		
+		
 	}
 
 	span.onclick = function() {
 		popup.style.display = "none";
+		$('#curve_chart').css("background-image", "none"); 
+		$('#curve_chart').empty();
 	}
 
 	window.onclick = function(event) {
 		if (event.target == popup) {
 			popup.style.display = "none";
+			$('#curve_chart').css("background-image", "none");
+			$('#curve_chart').empty(); 
 		}
 	}
 	</script>
