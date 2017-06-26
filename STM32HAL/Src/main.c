@@ -56,6 +56,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
 
 TIM_HandleTypeDef htim2;
 
@@ -70,7 +71,7 @@ volatile uint8_t pc_command_received_flag;
 volatile uint8_t pc_command_byte;
 volatile uint8_t values_retrieved = 0;
 
-uint16_t sensor_value_buffer[NUMBER_OF_MEASUREMENTS][5];
+uint16_t sensor_value_buffer[NUMBER_OF_MEASUREMENTS][6];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,7 +81,8 @@ static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_ADC1_Init(void);
-                                    
+static void MX_ADC2_Init(void);
+
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
 
@@ -102,6 +104,7 @@ int main(void)
 	uint32_t temp = 0;
 	uint32_t hum = 0;
   uint32_t moisture = 0;
+  uint32_t light = 0;
 	uint8_t state = STATE_WAKEUP_PARTICLE_SENSOR;
 	int timestamp = 0;
 	int measurements = 0;
@@ -129,12 +132,13 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_ADC1_Init();
+  MX_ADC2_Init();
 
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart1, uart2_receive_buffer, 1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   sds011_init(&huart2);
-  HAL_Delay(WAIT_AFTER_INITIALISATION);
+  //HAL_Delay(WAIT_AFTER_INITIALISATION);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -154,7 +158,7 @@ int main(void)
           break;
 
 				case GET_SENSOR_VALUES:
-					transmit_data_to_pc(pm2_5, pm10, temp, hum, moisture);
+					transmit_data_to_pc(pm2_5, pm10, temp, hum, moisture, light);
 					break;
 
 				case SET_BRIGHTNESS:
@@ -184,7 +188,7 @@ int main(void)
 			case STATE_GET_SENSOR_DATA_LOOP:
 				sds011_get_sensor_data(&huart2, &(sensor_value_buffer[measurements][0]), &(sensor_value_buffer[measurements][1]));
 				dht22_get_data(DHT22_PORT, DHT22_PIN, &(sensor_value_buffer[measurements][2]), &(sensor_value_buffer[measurements][3]));
-        sensor_value_buffer[measurements][4] = get_soil_moisture(&hadc1);
+        get_analog_values(&(sensor_value_buffer[measurements][4]), &(sensor_value_buffer[measurements][5]));
 				measurements++;
 				timestamp = HAL_GetTick();
 
@@ -204,6 +208,7 @@ int main(void)
 						temp += sensor_value_buffer[i][2];
 						hum += sensor_value_buffer[i][3];
             moisture += sensor_value_buffer[i][4];
+            light += sensor_value_buffer[i][5];
 					}
 
 					pm2_5 /= NUMBER_OF_MEASUREMENTS;
@@ -211,6 +216,7 @@ int main(void)
 					temp /= NUMBER_OF_MEASUREMENTS;
 					hum /= NUMBER_OF_MEASUREMENTS;
           moisture /= NUMBER_OF_MEASUREMENTS;
+          light /= NUMBER_OF_MEASUREMENTS;
 
           values_retrieved = 1;
 
@@ -318,6 +324,38 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* ADC2 init function */
+static void MX_ADC2_Init(void)
+{
+
+  ADC_ChannelConfTypeDef sConfig;
+
+    /**Common config 
+    */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.NbrOfConversion = 1;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }

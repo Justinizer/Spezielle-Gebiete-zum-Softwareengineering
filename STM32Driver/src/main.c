@@ -29,6 +29,7 @@ static const sensor_t SENSORS[] = {
 	{"/wohnzimmer/temperatur",	"Temperatur",		"°C",		1,			1},
 	{"/wohnzimmer/feuchtigkeit","Luftfeuchte",		"%rF",		1, 			1},
 	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		0, 			0},
+	{"/wohnzimmer/helligkeit",	"Helligkeit",		NULL,		0,			0},
 	// 
 	{"/wohnzimmer/mic",			"Lautstärke",		"dBa",		0,			1},
 	{"/wohnzimmer/bewegung",	"Bewegung",			NULL,		0,			0},
@@ -234,7 +235,6 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 	}
 
 
-
 	currentValuePtr = strtok(buffer, ";");
 	while (currentValuePtr && index < SENSOR_SIZE) {
 
@@ -244,7 +244,7 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 			value /= 10.0f;
 		}
 
-		if (index == 5) {
+		if (index == 6) {
 			value *= 126.8f;
 		}
 
@@ -262,8 +262,6 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 		currentValuePtr = strtok(NULL, ";");
 		index++;
 	}
-
-	//printf("%s\n", buffer2);
 
 	if (publish && !daemonizeFlag) {
 		close_mqtt_connection(&client);

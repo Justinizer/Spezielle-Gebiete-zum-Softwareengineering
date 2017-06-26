@@ -37,7 +37,7 @@ enum {
  * @param temperature: Temperature in °C.
  * @param humidity: Humidity in %rF.
  */
-void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity, int moisture);
+void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity, int moisture, int light);
 
 /**
  * Sends a string over UART to the connected PC.
