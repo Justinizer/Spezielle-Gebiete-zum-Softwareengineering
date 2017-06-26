@@ -1,6 +1,6 @@
-//var backendip = "127.0.0.1:8080/SHP-Web";
-//var backendip = "192.168.1.1:8080/SHP-Web"
-var backendip = window.location.host  + window.location.pathname;
+var backendip = "127.0.0.1:8080/SHP-Web/";
+//var backendip = "192.168.1.1:8080/SHP-Web/"
+//var backendip = window.location.host  + window.location.pathname;
 var baseUrl ="http://" + backendip + "rest/gui";
 var conditionRowId = 0;
 var actionRowId = 0;
@@ -22,7 +22,7 @@ function onMessage(event){
 	var jdata = JSON.parse(event.data);
 	var element = document.getElementById('thing' + jdata.id);
 
-	element.innerHTML  = jdata.value;
+	element.innerHTML  = jdata.value + " " + jdata.unit;
 	element.style.background = "red";
 
 	setTimeout(function() {
