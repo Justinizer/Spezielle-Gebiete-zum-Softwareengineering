@@ -1,11 +1,14 @@
 #ifndef _COMMUNICATION_H_
 #define _COMMUNICATION_H_
 
+#include <stdint.h>
+
 #define PC_COMMAND_PACKET_SIZE			4
 #define PC_COMMAND_HEADER				0xAA
 #define PC_COMMAND_TAIL					0xFF
 
 enum {
+	GET_STATUS = 0x00,			// Are values available?
 	GET_SENSOR_VALUES = 0x01,	// No parameter -> 0x00
 	SET_BRIGHTNESS				// Brightness in percent as parameter. Valid values: 0 - 100
 } PC_COMMAND_ID;
@@ -41,5 +44,7 @@ void transmit_data_to_pc(int pm2_5, int pm10, int temperature, int humidity, int
  * @param string: String which should be transmitted.
  */
 void send_string(const char *string);
+
+void send_status(uint8_t available);
 
 #endif
