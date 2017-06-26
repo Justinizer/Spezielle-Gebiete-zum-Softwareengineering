@@ -68,6 +68,7 @@ uint8_t uart2_receive_buffer[PC_COMMAND_PACKET_SIZE];
 uint8_t pc_command[PC_COMMAND_PACKET_SIZE];
 volatile uint8_t pc_command_received_flag;
 volatile uint8_t pc_command_byte;
+volatile uint8_t values_retrieved = 0;
 
 uint16_t sensor_value_buffer[NUMBER_OF_MEASUREMENTS][5];
 /* USER CODE END PV */
@@ -148,6 +149,10 @@ int main(void)
 			pc_command_received_flag = 0;
 
 			switch (pc_command[1]) {
+        case GET_STATUS:
+          send_status(values_retrieved);
+          break;
+
 				case GET_SENSOR_VALUES:
 					transmit_data_to_pc(pm2_5, pm10, temp, hum, moisture);
 					break;
@@ -206,6 +211,8 @@ int main(void)
 					temp /= NUMBER_OF_MEASUREMENTS;
 					hum /= NUMBER_OF_MEASUREMENTS;
           moisture /= NUMBER_OF_MEASUREMENTS;
+
+          values_retrieved = 1;
 
 					state = STATE_WAIT_MAIN_LOOP;
 				}
@@ -417,7 +424,6 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
 }
 

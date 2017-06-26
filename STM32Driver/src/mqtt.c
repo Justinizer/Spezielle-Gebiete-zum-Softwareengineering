@@ -16,7 +16,12 @@ int open_mqtt_connection(MQTTClient *client, const char *broker_address, const c
 	}
 
 
-	MQTTClient_create(client, broker_address, client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+	result = MQTTClient_create(client, broker_address, client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+	if (result != MQTTCLIENT_SUCCESS) {
+		printf("Error creating client! Result: %d\n", result);
+		return 1;
+	}
+
 	opt.keepAliveInterval = 20;
 	opt.cleansession = 1;
 

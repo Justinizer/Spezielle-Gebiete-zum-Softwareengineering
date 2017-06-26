@@ -11,7 +11,7 @@ TARGET = main
 SRCDIR = src
 OBJDIR = obj
 DOCDIR = doc
-LIBDIR = 
+LIBDIR =
 INCDIR =
 
 # Programme:
