@@ -1,11 +1,21 @@
 package rest;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.imageio.ImageIO;
+import javax.sound.midi.Patch;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -14,6 +24,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,7 +61,7 @@ public class Gui implements Serializable {
 	public String test() {
 		System.out.println("TESTING!!");
 		//System.out.println(WebSocket.clientSessions.size());
-bh.test();
+		bh.test();
 		
 		return helper.getSuccess().toString();
 	}
@@ -518,6 +529,18 @@ bh.test();
 		return helper.getFail().toString();
 	}
 	
-	
+	@Produces("image/png")
+	@GET
+	@Path("copy")
+	public Response copyImage(){
+		 try {
+			return Response.ok(new FileInputStream(new File("C:\\Users\\Jonas\\Desktop\\wow.png"))).build();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 return null;
+		
+	}	
 
 }

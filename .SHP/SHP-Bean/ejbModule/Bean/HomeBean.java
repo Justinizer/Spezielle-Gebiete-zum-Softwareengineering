@@ -495,6 +495,7 @@ public class HomeBean implements HomeBeanRemote {
 		em.remove(toDel);
 		return true;
 	}
+	
 
 
 

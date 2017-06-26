@@ -5,7 +5,8 @@ import java.util.ArrayList;
 public enum ThingType {
 	Sensor,
 	DigitalActor,
-	AnalogActor;
+	AnalogActor,
+	CameraSensor;
 	
 	public static ThingType getByIndex(int index) {
 		switch (index) {
@@ -15,6 +16,8 @@ public enum ThingType {
 			return ThingType.DigitalActor;
 		case 2:
 			return ThingType.AnalogActor;
+		case 3:
+			return ThingType.CameraSensor;
 		
 		}
 		return null;
@@ -25,6 +28,7 @@ public enum ThingType {
 		all.add(ThingType.Sensor);
 		all.add(ThingType.DigitalActor);
 		all.add(ThingType.AnalogActor);
+		all.add(ThingType.CameraSensor);
 		
 		ThingType[] temp = new ThingType[all.size()];
 		return  all.toArray(temp);
@@ -38,6 +42,8 @@ public enum ThingType {
 			return "Digitaler Aktor";
 		case AnalogActor:
 			return "Analoger Aktor";
+		case CameraSensor:
+			return "Kamera Sensor";
 		default:
 			return "";
 		}
@@ -51,6 +57,9 @@ public enum ThingType {
 			return 1;
 		case AnalogActor:
 			return 2;
+		case CameraSensor:
+			return 3;
+		
 		default:
 			return -1;
 		}
