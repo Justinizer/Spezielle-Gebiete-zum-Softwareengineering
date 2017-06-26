@@ -1,6 +1,11 @@
 package rest;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.List;
+
+import javax.ws.rs.core.Response;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -95,5 +100,27 @@ public class GuiHelper {
 		inner.put("mqtttopic", t.getMqttTopic());
 		inner.put("currentValue", getCurrentValue(t));
 		return inner;
+	}
+	
+	public Response getImageFromID(Thing t){
+		try {
+			SensorData s = t.getLastSensorData();
+			if( s == null){
+				return Response.noContent().build();
+			}
+			String path = s.getValue();
+			if(path == null){
+				return Response.noContent().build();
+			}
+			System.out.println("pic path is " + path );
+			File file = new File(path);
+			if(!file.exists()){
+				return Response.noContent().build();
+			}			
+			return Response.ok(new FileInputStream(file)).build();
+		} catch (FileNotFoundException e) {
+			
+		}
+		return Response.noContent().build();
 	}
 }

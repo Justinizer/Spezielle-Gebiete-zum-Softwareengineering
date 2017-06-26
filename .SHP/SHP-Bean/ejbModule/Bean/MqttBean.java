@@ -173,8 +173,8 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	public void messageArrived(String topic, MqttMessage arg1) {
 		System.out.println(topic + " " + new String(arg1.getPayload()));
 		Thing databaseThing = things.get(topic);
-		SensorData data = new SensorData(new String(arg1.getPayload()), databaseThing);
-		
+		SensorData data = new SensorData(new String(arg1.getPayload()).replace("\\", "\\\\"), databaseThing);
+
 		/*
 		 * warum ich den umweg über die hb gehe und nicht einfach
 		 * em.persis(data) mache? weils nicht geht... namedquerrys gehen,

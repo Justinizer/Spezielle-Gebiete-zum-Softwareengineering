@@ -96,17 +96,32 @@
 	var span = document.getElementsByClassName("close")[0];
 
 	function openPopup(thingId, name) {
-		popup.style.display = "block";
+		popup.style.display = "block";		
 		getAndDisplayDataInChart(thingId, name);
+	}
+
+	function openPopupImage(thingId, imageUrl){
+		$('#curve_chart').empty();
+		popup.style.display = "block";
+		d = new Date();
+		imageUrl += "?"+d.getTime();
+		$('#curve_chart').css("background-image", "url("+ imageUrl + ")");  	
+		
+		
+		
 	}
 
 	span.onclick = function() {
 		popup.style.display = "none";
+		$('#curve_chart').css("background-image", "none"); 
+		$('#curve_chart').empty();
 	}
 
 	window.onclick = function(event) {
 		if (event.target == popup) {
 			popup.style.display = "none";
+			$('#curve_chart').css("background-image", "none");
+			$('#curve_chart').empty(); 
 		}
 	}
 	</script>

@@ -1,21 +1,15 @@
 package rest;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.util.Date;
 import java.util.List;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.imageio.ImageIO;
-import javax.sound.midi.Patch;
+
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -531,15 +525,21 @@ public class Gui implements Serializable {
 	
 	@Produces("image/png")
 	@GET
-	@Path("copy")
-	public Response copyImage(){
-		 try {
-			return Response.ok(new FileInputStream(new File("C:\\Users\\Jonas\\Desktop\\wow.png"))).build();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	@Path("image/{thingid}")
+	public Response copyImage(@PathParam("thingid") int thingid){
+		Thing t = bh.getThingById(thingid);
+		if(t == null){
+			return Response.noContent().build();
 		}
-		 return null;
+		if(t.getType() !=  ThingType.CameraSensor){
+			return Response.noContent().build();
+		}
+		
+		Response r = helper.getImageFromID(t);
+		if(r == null){
+			return Response.noContent().build();
+		}
+		return r;
 		
 	}	
 
