@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 extern const char *BRIGHTNESS_TOPIC;
+extern const char *serial0;
 
 
 int open_mqtt_connection(MQTTClient *client, const char *broker_address, const char *client_id) {
@@ -112,7 +113,7 @@ int mqtt_message_arrived(void *context, char *topicName, int topicLen, MQTTClien
 			if (elements == 1) {
 
 				syslog(LOG_INFO, "Setting brightness to %d", brightness);
-				set_brightness(brightness);
+				set_brightness(serial0, brightness);
 			}
 
 			free(msgBuffer);

@@ -6,9 +6,10 @@
 
 /**
  * Open a serial connection over /dev/ttyAMA0.
+ * @param serial_device Device that should be used for serial communication.
  * @return New file descriptor of the opened serial connection or -1 if an error occurred.
  */
-int serial_open(void);
+int serial_open(const char *serial_device);
 
 /**
  * Receives a string over a serial connection. Terminates the string with '\0'.

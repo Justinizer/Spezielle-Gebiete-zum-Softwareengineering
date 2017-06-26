@@ -28,11 +28,20 @@ static const sensor_t SENSORS[] = {
 	{"/garten/pm10",			"Feinstaub 10µm",	"µg/m³",	1,			1},
 	{"/wohnzimmer/temperatur",	"Temperatur",		"°C",		1,			1},
 	{"/wohnzimmer/feuchtigkeit","Luftfeuchte",		"%rF",		1, 			1},
-	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		0, 			0}
+	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		0, 			0},
+	// 
+	{"/wohnzimmer/mic",			"Lautstärke",		"dBa",		0,			1},
+	{"/wohnzimmer/bewegung",	"Bewegung",			NULL,		0,			0},
+	{"/kueche/voc",				"VOC",				"MOF",		0,			0},
+	{"/kueche/feuer",			"Feuer",			NULL,		0,			0}
+
+	// *100*1.228+4
 };
 
 static const size_t SENSOR_SIZE = sizeof(SENSORS) / sizeof(SENSORS[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
+const char *serial0 = "/dev/ttyAMA0";
+const char *serial1 = "/dev/ttyACM0";
 static const char *CLIENT_ID = "stm32driver2";
 const char *BRIGHTNESS_TOPIC = "/wohnzimmer/led/rot";
 
@@ -121,7 +130,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (setBrightnessFlag) {
-		return set_brightness(setBrightness);
+		return set_brightness(serial0, setBrightness);
 	}
 
 	if (daemonizeFlag) {
@@ -178,27 +187,41 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 	char *currentValuePtr;
 	const char *unit;
 	size_t index = 0;
-	char buffer[RECEIVE_BUFFER_SIZE];
+	//char buffer[RECEIVE_BUFFER_SIZE];
+	char buffer[100];
+	size_t data1_len;
 	char availability;
 	float value;
 	int result;
 
-	if (get_value_availability(&availability)) {
+	if (get_value_availability(serial0, &availability)) {
 		return 1;
 	}
 
 	if (availability == '0') {
-		printf("No values available.\n");
+		if (daemonizeFlag) {
+			syslog(LOG_INFO, "No values available.");
+
+		} else {
+			printf("No values available.\n");
+		}
+
 		return 0;
 	}
 
-	if (get_data(buffer, RECEIVE_BUFFER_SIZE) == 1) {
+	if (get_data(serial0, buffer, RECEIVE_BUFFER_SIZE) == 1) {
+		return 1;
+	}
+
+	data1_len = strlen(buffer);
+	buffer[data1_len] = ';';
+
+	if (get_data(serial1, buffer + data1_len + 1, 100 - data1_len - 1) == 1) {
 		return 1;
 	}
 
 	if (print && printRaw) {
 		printf("%s\n", buffer);
-
 	} 
 
 
@@ -211,6 +234,7 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 	}
 
 
+
 	currentValuePtr = strtok(buffer, ";");
 	while (currentValuePtr && index < SENSOR_SIZE) {
 
@@ -218,6 +242,10 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 
 		if (SENSORS[index].div_by_10) {
 			value /= 10.0f;
+		}
+
+		if (index == 5) {
+			value *= 126.8f;
 		}
 
 		if (print && !printRaw) {
@@ -234,6 +262,8 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 		currentValuePtr = strtok(NULL, ";");
 		index++;
 	}
+
+	//printf("%s\n", buffer2);
 
 	if (publish && !daemonizeFlag) {
 		close_mqtt_connection(&client);
