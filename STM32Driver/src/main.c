@@ -33,7 +33,7 @@ static const sensor_t SENSORS[] = {
 
 static const size_t SENSOR_SIZE = sizeof(SENSORS) / sizeof(SENSORS[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
-static const char *CLIENT_ID = "stm32driver";
+static const char *CLIENT_ID = "stm32driver2";
 const char *BRIGHTNESS_TOPIC = "/wohnzimmer/led/rot";
 
 int daemonizeFlag = 0;
@@ -179,7 +179,18 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 	const char *unit;
 	size_t index = 0;
 	char buffer[RECEIVE_BUFFER_SIZE];
+	char availability;
 	float value;
+	int result;
+
+	if (get_value_availability(&availability)) {
+		return 1;
+	}
+
+	if (availability == '0') {
+		printf("No values available.\n");
+		return 0;
+	}
 
 	if (get_data(buffer, RECEIVE_BUFFER_SIZE) == 1) {
 		return 1;
@@ -190,8 +201,13 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 
 	} 
 
-	if (publish) {
-		open_mqtt_connection(&client, broker_address, CLIENT_ID);
+
+	if (publish && !daemonizeFlag) {
+		result = open_mqtt_connection(&client, broker_address, CLIENT_ID);
+
+		if (result == 1) {
+			return 1;
+		}
 	}
 
 
@@ -210,14 +226,16 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 		}
 
 		if (publish) {
-			mqtt_send_value(client, SENSORS[index].topic, value);
+			if (mqtt_send_value(&client, SENSORS[index].topic, value) == 1) {
+				break;
+			}
 		}
 
 		currentValuePtr = strtok(NULL, ";");
 		index++;
 	}
 
-	if (publish) {
+	if (publish && !daemonizeFlag) {
 		close_mqtt_connection(&client);
 	}
 
