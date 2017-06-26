@@ -10,8 +10,8 @@
 
 #include <stdlib.h>
 
-int set_brightness(int brightness);
-int get_data(char *buffer, size_t buffersize);
-int get_value_availability(char *availability);
+int set_brightness(const char *serial_device, int brightness);
+int get_data(const char *serial_device, char *buffer, size_t buffersize);
+int get_value_availability(const char *serial_device, char *availability);
 
 #endif

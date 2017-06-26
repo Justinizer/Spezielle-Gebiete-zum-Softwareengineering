@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-
-int set_brightness(int brightness) {
+int set_brightness(const char *serial_device, int brightness) {
 	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_SET_BRIGHTNESS, 0x00, COMMAND_PACKET_TAIL};
 	int fd;
 
@@ -15,7 +14,7 @@ int set_brightness(int brightness) {
 
 	packet[2] = (brightness & 0xFF);
 
-	fd = serial_open();
+	fd = serial_open(serial_device);
 	if (fd == -1) {
 		printf("Error opening the serial connection: %s\n", strerror(errno));
 		return 1;
@@ -32,15 +31,15 @@ int set_brightness(int brightness) {
 	return 0;
 }
 
-int get_data(char *buffer, size_t buffersize) {
+int get_data(const char *serial_device, char *buffer, size_t buffersize) {
 	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_GET_DATA, 0x00, COMMAND_PACKET_TAIL};
 	int fd;
 
-	if (!buffer || buffersize == 0) {
+	if (!serial_device || !buffer || buffersize == 0) {
 		return 1;
 	}
 
-	fd = serial_open();
+	fd = serial_open(serial_device);
 	if (fd == -1) {
 		printf("Error opening the serial connection: %s\n", strerror(errno));
 		return 1;
@@ -59,12 +58,12 @@ int get_data(char *buffer, size_t buffersize) {
 	return 0;
 }
 
-int get_value_availability(char *availability) {
+int get_value_availability(const char *serial_device, char *availability) {
 	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_GET_STATUS, 0x00, COMMAND_PACKET_TAIL};
 	char buffer[3];
 	int fd;
 
-	fd = serial_open();
+	fd = serial_open(serial_device);
 	if (fd == -1) {
 		printf("Error opening the serial connection: %s\n", strerror(errno));
 		return 1;

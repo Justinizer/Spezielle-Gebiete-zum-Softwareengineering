@@ -4,11 +4,19 @@
 #include <fcntl.h>		// For open()
 #include <errno.h>		// For errno
 #include <termios.h>	// For tcgetattr(), cfsetispeed(), cfsetospeed(), tcflush(), tcsetattr()
+#include <sys/ioctl.h>
+#include <linux/fs.h>
 
-int serial_open(void) {
+extern const char *serial1;
+
+int serial_open(const char *serial_device) {
 	int fd;
 
-	fd = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY);
+	if (!serial_device) {
+		return -1;
+	}
+
+	fd = open(serial_device, O_RDWR | O_NOCTTY);
 	if (fd == -1) {
 		return -1;
 	}
@@ -78,6 +86,8 @@ int serial_write_buffer(int fd, const char *buffer, size_t buffersize) {
 		bytes_written += result;
 
 	} while (result < buffersize && result >= 0);
+
+	ioctl(fd, BLKFLSBUF);
 
 	return result;
 }
