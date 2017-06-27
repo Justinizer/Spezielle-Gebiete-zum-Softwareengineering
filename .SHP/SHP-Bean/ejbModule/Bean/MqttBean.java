@@ -24,7 +24,6 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
@@ -199,7 +198,6 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 			System.out.println("affected: " + a.getName());
 			if (a.fulfilled(data.getValue(), topic)) {
 				/* conditions are fulfilled: FIRE the actions */
-				//System.out.println(a.getName() + "  firing!");
 				for (Action action : a.getActions()) {
 					publish(action.getThing().getMqttTopic(), action.getValue());
 				}

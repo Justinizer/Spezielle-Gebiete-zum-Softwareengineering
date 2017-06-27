@@ -1,8 +1,5 @@
 package rest;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -84,6 +81,12 @@ public class Gui implements Serializable {
 		return json.toString();
 	}
 
+	/**
+	 * create a new user
+	 * @param email the new email address
+	 * @param password the new password
+	 * @return Success if user is created
+	 */
 	@POST
 	@Path("/login")
 	@Produces("application/json")
@@ -144,6 +147,12 @@ public class Gui implements Serializable {
 		return json.toString();
 	}
 
+	/**
+	 * get all actors, for non logged in users (alexa will call this method)
+	 * @param email
+	 * @param password
+	 * @return
+	 */
 	@Produces("application/json")
 	@GET
 	@Path("thing/actor/{email}/{password}")
@@ -484,6 +493,10 @@ public class Gui implements Serializable {
 		
 	}
 	
+	/**
+	 * gett current weather with name and image
+	 * @return
+	 */
 	@Produces("application/json")
 	@GET
 	@Path("weather")
@@ -498,6 +511,14 @@ public class Gui implements Serializable {
 	}
 	
 	
+	/**
+	 * add a new thing to the system
+	 * @param name of the thing
+	 * @param mqttTopic of the thing
+	 * @param iType of the thing (from get types)
+	 * @param unit the unit if is a sensor
+	 * @return
+	 */
 	@Produces("application/json")
 	@POST
 	@Path("thing/add")
@@ -512,6 +533,11 @@ public class Gui implements Serializable {
 		
 	}
 	
+	/**
+	 * delete a thing from the system
+	 * @param thingid
+	 * @return
+	 */
 	@Produces("application/json")
 	@DELETE
 	@Path("thing/{thingid}")
@@ -523,6 +549,11 @@ public class Gui implements Serializable {
 		return helper.getFail().toString();
 	}
 	
+	/**
+	 * get the last image from the facial recognition system
+	 * @param thingid
+	 * @return
+	 */
 	@Produces("image/png")
 	@GET
 	@Path("image/{thingid}")

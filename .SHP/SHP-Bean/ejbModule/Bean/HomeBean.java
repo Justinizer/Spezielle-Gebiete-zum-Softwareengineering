@@ -8,7 +8,6 @@ import javax.ejb.Remote;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.swing.DropMode;
 
 import Interface.HomeBeanRemote;
 import Interface.MqttBeanRemote;
@@ -286,6 +285,9 @@ public class HomeBean implements HomeBeanRemote {
 		return c.getAutomation();
 	}
 	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#updateAction(int, int, java.lang.String, java.lang.String)
+	 */
 	@Override
 	public Automation updateAction(int actionid, int thingid, String name, String value){
 		if(!isLoggedin){
@@ -308,6 +310,9 @@ public class HomeBean implements HomeBeanRemote {
 		return getAutomationById(fromDB.getAutomation().getId());
 	}
 	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#updateCondition(int, int, Model.ConditionType, java.lang.String)
+	 */
 	@Override
 	public Automation updateCondition(int conditionID, int thingID, ConditionType type, String value){
 		if(!isLoggedin){
@@ -430,6 +435,9 @@ public class HomeBean implements HomeBeanRemote {
 		return em.find(Automation.class,autoid);
 	}
 	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#deleteAutomation(int)
+	 */
 	public boolean deleteAutomation(int autoid){
 		if (!isLoggedin) {
 			return false;
