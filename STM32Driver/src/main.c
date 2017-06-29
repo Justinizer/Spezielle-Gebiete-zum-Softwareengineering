@@ -3,23 +3,24 @@
 #include <stdlib.h>
 #include <getopt.h>		// For getopt_long()
 #include <unistd.h>		// For sleep()
-#include <syslog.h>
+#include <syslog.h>		// For openlog(), syslog()
 #include <stdio.h>
-#include <errno.h>
+#include <errno.h>		// For errno
 #include <stdint.h>
 #include "daemonize.h"
 #include "commands.h"
 #include "serial.h"
 #include "mqtt.h"
 
-#define RECEIVE_BUFFER_SIZE	20
+#define RECEIVE_BUFFER_SIZE	100
+#define PUBLISH_TIME		60
 
 typedef struct {
-	const char *topic;
-	const char *value_name;
-	const char *unit;
-	uint8_t div_by_10;
-	uint8_t value_is_float;
+	const char *topic;			// Name of the topic to which the value should be published.
+	const char *value_name;		// Name of the value for output.
+	const char *unit;			// Unit of the value for output.
+	uint8_t div_by_10;			// Should the read value be divided by 10?
+	uint8_t value_is_float;		// Is the read value a floataing point value? (Used for output)
 } sensor_t;
 
 static const sensor_t SENSORS[] = {
@@ -30,20 +31,17 @@ static const sensor_t SENSORS[] = {
 	{"/wohnzimmer/feuchtigkeit","Luftfeuchte",		"%rF",		1, 			1},
 	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		0, 			0},
 	{"/wohnzimmer/helligkeit",	"Helligkeit",		NULL,		0,			0},
-	// 
 	{"/wohnzimmer/mic",			"Lautstärke",		"dBa",		0,			1},
 	{"/wohnzimmer/bewegung",	"Bewegung",			NULL,		0,			0},
 	{"/kueche/voc",				"VOC",				"MOF",		0,			0},
 	{"/kueche/feuer",			"Feuer",			NULL,		0,			0}
-
-	// *100*1.228+4
 };
 
 static const size_t SENSOR_SIZE = sizeof(SENSORS) / sizeof(SENSORS[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
 const char *serial0 = "/dev/ttyAMA0";
 const char *serial1 = "/dev/ttyACM0";
-static const char *CLIENT_ID = "stm32driver2";
+static const char *CLIENT_ID = "stm32driver";
 const char *BRIGHTNESS_TOPIC = "/wohnzimmer/led/rot";
 
 int daemonizeFlag = 0;
@@ -120,11 +118,10 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// Switch to default broker address if there wasn't any address provided.
 	if (!broker_address) {
 		broker_address = (char *)DEFAULT_BROKER_ADDRESS;
 	}
-
-
 
 	if (getDataFlag || publishFlag) {
 		return get_and_print_data(publishFlag, 1, printDataRawFlag);
@@ -160,7 +157,7 @@ int main(int argc, char *argv[]) {
 			get_and_print_data(1, 0, 0);
 			syslog(LOG_INFO, "Publishing data.");
 
-			sleep(60);	// Wait 5 mins
+			sleep(PUBLISH_TIME);
 		}
 	}
 
@@ -188,18 +185,18 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 	char *currentValuePtr;
 	const char *unit;
 	size_t index = 0;
-	//char buffer[RECEIVE_BUFFER_SIZE];
-	char buffer[100];
+	char buffer[RECEIVE_BUFFER_SIZE];
 	size_t data1_len;
-	char availability;
 	float value;
+	int availability;
 	int result;
 
-	if (get_value_availability(serial0, &availability)) {
+	availability = get_value_availability(serial0);
+	if (availability == -1) {
 		return 1;
 	}
 
-	if (availability == '0') {
+	if (availability == 0) {
 		if (daemonizeFlag) {
 			syslog(LOG_INFO, "No values available.");
 
@@ -217,7 +214,7 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 	data1_len = strlen(buffer);
 	buffer[data1_len] = ';';
 
-	if (get_data(serial1, buffer + data1_len + 1, 100 - data1_len - 1) == 1) {
+	if (get_data(serial1, buffer + data1_len + 1, RECEIVE_BUFFER_SIZE - data1_len - 1) == 1) {
 		return 1;
 	}
 
