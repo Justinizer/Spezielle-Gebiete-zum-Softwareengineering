@@ -10,7 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import Interface.HomeBeanRemote;
-import Interface.MqttBeanRemote;
+import Interface.AutomationBeanRemote;
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
@@ -34,7 +34,7 @@ public class HomeBean implements HomeBeanRemote {
 	EntityManager em;
 
 	@EJB
-	MqttBeanRemote mb;
+	AutomationBeanRemote mb;
 
 	private boolean isLoggedin = false;
 	private User user;

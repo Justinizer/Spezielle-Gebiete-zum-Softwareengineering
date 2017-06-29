@@ -15,8 +15,8 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
-import Bean.MqttBean;
-import Interface.MqttBeanRemote;
+import Bean.AutomationBean;
+import Interface.AutomationBeanRemote;
 
 @ServerEndpoint("/websocket")
 public class WebSocket implements Serializable { 
@@ -30,7 +30,7 @@ public class WebSocket implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@EJB
-	MqttBeanRemote bh;
+	AutomationBeanRemote bh;
 	
 	/**
 	 * Add client session to the Set
@@ -41,7 +41,7 @@ public class WebSocket implements Serializable {
 	public void onOpen(Session aClientSession) {
 		System.out.println("NEW WS!");
 		clientSessions.add(aClientSession);
-		MqttBean.clientSessions.add(aClientSession);
+		AutomationBean.clientSessions.add(aClientSession);
 	}
 	
 	/**

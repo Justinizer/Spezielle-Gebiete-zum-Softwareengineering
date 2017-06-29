@@ -1,23 +1,7 @@
 package Bean;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
-import javax.ejb.Remote;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.websocket.Session;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -25,209 +9,67 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import Interface.HomeBeanRemote;
-import Interface.MqttBeanRemote;
-import Model.Action;
-import Model.Automation;
-import Model.Condition;
-import Model.SensorData;
-import Model.SystemConfig;
-import Model.Thing;
+import Interface.ProtocolInterface;
+import Interface.Receiver;
 
 /**
- * Startup Bean for Mqtt Client. Connects to the Broker and adds Data to the DB
+ * @author Jonas
+ * ProtocolInterface implementation for MQTT
  */
+public class MqttBean extends ProtocolInterface implements MqttCallback {
 
-@Startup
-@Singleton
-@Remote(MqttBeanRemote.class)
-public class MqttBean implements MqttCallback, MqttBeanRemote {
-	public static MqttClient client;
-	
-	/* kind of ugly to have it like that, but to make it nice a JMS needs to be added... 
-	 * now the SHP-Web.websocket.WebSocket websocket endpoint adds and removes the sessions*/
-	public static final Set<Session> clientSessions = Collections.synchronizedSet(new HashSet<Session>());
-	
+	private  MqttClient client;
+	private HashSet<String> topics = new HashSet<String>();
 
-	@PersistenceContext
-	EntityManager em;
-
-	@EJB
-	HomeBeanRemote hb;
-
-	private Map<String, Thing> things = new HashMap<String, Thing>();
-
-	private Map<String, List<Automation>> autos = new HashMap<String, List<Automation>>();
-
-	public MqttBean() {
-
+	public MqttBean(Receiver r) {
+		super(r);
 	}
-
-	/**
-	 * called at the startup of the Server
-	 * Initializes the mqtt client and connects to all topics
+	
+	/* (non-Javadoc)
+	 * @see Interface.ProtocolInterface#connectToBroker()
 	 */
-	@PostConstruct
-	public void init() {
-		System.out.println("----> MQTT BEAN STARTED <----");
-		buildTopicAutomationMap();
-		/* get the mqtt conifg */
-		SystemConfig sc = hb.getSystemConfig();
-		System.out.println(sc.getMqttServer());		
+	@Override
+	public void connectToBroker() throws Exception {
+		client = connectMQTT(r.getBrokerAddress());
+		for (String t : topics)
+			client.subscribe(t);
 
-		try {
-			client = connectMQTT(sc);
-			connectTopics();				
-			
-		} catch (MqttException e) {			
-			e.printStackTrace();
-			System.out.println("MQTT BEAN START: " + e.toString()); 
-		}
-	
-		
 	}
-	
+
 	/**
 	 * connect a new mqtt client to the broker, and register the callback
-	 * @param sc the broker ip
+	 * 
+	 * @param sc
+	 *            the broker ip
 	 * @return the connected client
 	 * @throws MqttException
 	 */
-	private MqttClient connectMQTT(SystemConfig sc) throws MqttException{			
-		
-		MqttClient client = new MqttClient("tcp://" + sc.getMqttServer(), "SHP" + new Random().nextInt(500000));
+	private MqttClient connectMQTT(String sc) throws MqttException {
+
+		MqttClient client = new MqttClient("tcp://" + sc, "SHP" + new Random().nextInt(500000));
 		client.connect();
 		client.setCallback(this);
-		System.out.println("!!!!CONNECTED!!!!");		
-		return client;		
-		
-	}
-	
-	/**
-	 * loads all topics from the DB and connects the "client" to them
-	 * @throws MqttException
-	 */
-	private void connectTopics() throws MqttException{		
-		@SuppressWarnings("unchecked")
-		List<Thing> thingsList = (List<Thing>) em.createNamedQuery(Thing.GET_ALL_THINGS).getResultList();
-		things.clear();		
-		for (Thing t : thingsList) {			
-			things.put(t.getMqttTopic(), t);
-			client.subscribe(t.getMqttTopic());
-				
-		}
-	}
-	
-	
-	
+		System.out.println("!!!!CONNECTED!!!!");
+		return client;
 
-
-	/**
-	 * builds a map - mqtt topic to automation each subscribed mqtt topic is
-	 * connected to at least one automation that needs to be checked, when new
-	 * data is available on that topic
-	 * 
-	 */
-	private void buildTopicAutomationMap() {
-		@SuppressWarnings("unchecked")
-		List<Automation> autolist = em.createNamedQuery(Automation.GET_ALL_AUTOMATIONS).getResultList();
-		Map<String, List<Automation>> map = new HashMap<String, List<Automation>>();
-
-		/* loop all conditions in all automations */
-		for (Automation a : autolist) {
-			List<Condition> conditionList = a.getConditions();
-			if (conditionList != null) {
-				for (Condition c : a.getConditions()) {
-					/* get the mqtt topic for the condition */
-					String key = c.getThing().getMqttTopic();
-
-					/* check if the topic is already in the map */
-					if (map.containsKey(key)) {
-						List<Automation> tmpList = map.get(key);
-						/*
-						 * check if the automation is already in the list, if
-						 * not, it needs to be added
-						 */
-						if (!tmpList.contains(a)) {
-							tmpList.add(a);
-							map.put(key, tmpList);
-						}
-					} else {
-						/* the topic was not in the map, it needs to be added */
-						List<Automation> newList = new ArrayList<Automation>();
-						newList.add(a);
-						map.put(key, newList);
-					}
-				}
-			}
-		}
-		autos = map;
 	}
 
-	/**
-	 * callback for the mqtt client. Is called, when a new message for a
-	 * subsribed topic is received
+
+	/* (non-Javadoc)
+	 * @see Interface.ProtocolInterface#publish(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void messageArrived(String topic, MqttMessage arg1) {
-		System.out.println(topic + " " + new String(arg1.getPayload()));
-		Thing databaseThing = things.get(topic);
-		SensorData data = new SensorData(new String(arg1.getPayload()).replace("\\", "\\\\"), databaseThing);
-
-		/*
-		 * warum ich den umweg über die hb gehe und nicht einfach
-		 * em.persis(data) mache? weils nicht geht... namedquerrys gehen,
-		 * persist nicht :(
-		 */			
+	public boolean publish(String t, String message) {
+		if (!checkMqttClient()) {
+			return false;
+		}
 		try {
-			hb.addData(data);
-		} catch (Exception e) {
-			System.out.println("MQTT BEAN: " + e.toString());
-		}		
-
-		handleWSSessions(databaseThing, data);
-		
-		
-		List<Automation> affectedAutos = autos.get(topic);
-		if (affectedAutos == null) {
-			return;
+			client.publish(t, new MqttMessage(message.getBytes()));
+			return true;
+		} catch (MqttException e) {
+			System.out.println("MQTT BEAN PUBLISH FAILED" + e.toString());
 		}
-
-		/* check all affected automations, if they fulfill the conditions */
-		for (Automation a : affectedAutos) {
-			System.out.println("affected: " + a.getName());
-			if (a.fulfilled(data.getValue(), topic)) {
-				/* conditions are fulfilled: FIRE the actions */
-				for (Action action : a.getActions()) {
-					publish(action.getThing().getMqttTopic(), action.getValue());
-				}
-
-			}
-		}
-
-
-	}
-	
-	
-	/**
-	 * update the websockets with the new data
-	 * @param databaseThing the thing
-	 * @param data the new data
-	 */
-	private void handleWSSessions(Thing databaseThing, SensorData data){
-		ArrayList<Session> toDelete = new ArrayList<Session>();
-		
-		for (Session s : clientSessions){
-			try {
-				s.getBasicRemote().sendText("{\"id\":" + databaseThing.getId() + ", \"value\": \"" + data.getValue() + "\", \"type\":\"" + databaseThing.getType() + "\", \"unit\": \"" + databaseThing.getUnit() + "\"}");
-			} catch (IOException e) {
-				toDelete.add(s);
-			}
-		}
-		
-		for(Session s: toDelete){
-			clientSessions.remove(s);
-		}
+		return false;
 	}
 
 	/**
@@ -237,29 +79,55 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 	 */
 	private boolean checkMqttClient() {
 
-		try {
-			if (client == null) {
-				client = new MqttClient("tcp://" + hb.getSystemConfig().getMqttServer(),
-						"SHP" + new Random().nextInt(500000));
-			}
-			if (!client.isConnected()) {
-				client.connect();
-			}
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			System.out.println("MQTTBEAN CHECKMQTTCLIENT " + e.toString());
+		if(client != null)
+		{
+			if(client.isConnected())
+				return true;
 		}
+		try{
+			connectToBroker();
+		}catch(Exception m){
+			return false;
+		}
+		
 		return client.isConnected();
 	}
-
-	/**
-	 * Sleep 2 seconds
+	
+	
+	/* (non-Javadoc)
+	 * @see Interface.ProtocolInterface#listento(java.lang.String[])
 	 */
-	private void sleep2k() {
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
+	@Override
+	public void listento(String[] t) throws Exception {
+		/* listen only to the new topics! */
+		for(String old: topics){
+			client.unsubscribe(old);
 		}
+		
+		topics.clear();
+		for (String m : t) {
+			topics.add(m);
+			if (client != null) {
+				client.subscribe(m);
+
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see Interface.ProtocolInterface#listento(java.lang.String)
+	 */
+	@Override
+	public void listento(String t) throws Exception {
+		if (topics.contains(t)) {
+			return;
+		}
+		topics.add(t);
+		if (client == null) {
+			return;
+		}
+		client.subscribe(t);
+
 	}
 
 	@Override
@@ -280,47 +148,32 @@ public class MqttBean implements MqttCallback, MqttBeanRemote {
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
+		// TODO Auto-generated method stub
+
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see Interface.HomeBeanRemote#publish(java.lang.String, java.lang.String)
+	/**
+	 * callback for the mqtt client. Is called, when a new message for a
+	 * subsribed topic is received
 	 */
 	@Override
-	public boolean publish(String t, String message) {
-		if (!checkMqttClient()) {
-			return false;
-		}
-		try {
-			client.publish(t, new MqttMessage(message.getBytes()));
-			//System.out.println("done");
-			return true;
-		} catch (MqttException e) {
-			System.out.println("MQTT BEAN PUBLISH FAILED" + e.toString());
-			//e.printStackTrace();
-		}
-		return false;
+	public void messageArrived(String topic, MqttMessage arg1) {
+		r.gotMessage(new String(arg1.getPayload()), topic);
+
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see Interface.MqttBeanRemote#reloadAutomations()
+	/**
+	 * Sleep 2 seconds
 	 */
-	@Override
-	public void reloadAutomations() {
-		buildTopicAutomationMap();
+	private void sleep2k() {
 		try {
-			connectTopics();
-		} catch (MqttException e) {
-			
-		}	
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
 	}
+
 	
-	public void testi() {
-		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
-	}
+
 
 
 }

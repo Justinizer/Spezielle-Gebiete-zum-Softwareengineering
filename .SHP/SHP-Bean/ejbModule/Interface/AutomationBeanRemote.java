@@ -1,6 +1,6 @@
 package Interface;
 
-public interface MqttBeanRemote {
+public interface AutomationBeanRemote {
 	
 	/**
 	 * just a test method to verify that the bean is reachable
