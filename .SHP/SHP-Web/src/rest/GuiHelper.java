@@ -44,14 +44,27 @@ public class GuiHelper {
 		return lastValue;
 	}
 	
+	/**
+	 * get a simple status: success json object
+	 * @return
+	 */
 	public JSONObject getSuccess(){
 		return success;
 	}
 	
+	/**
+	 * get a simple status: fail json object
+	 * @return
+	 */
 	public JSONObject getFail(){
 		return fail;
 	}
 	
+	/**
+	 * get a json object will all the information about a given automation
+	 * @param auto
+	 * @return
+	 */
 	public JSONObject getOneAutomation(Automation auto){
 		JSONObject jsonAuto = new JSONObject();
 		jsonAuto.put("name", auto.getName());
@@ -83,6 +96,11 @@ public class GuiHelper {
 		return jsonAuto;
 	}
 	
+	/**
+	 * list all automations with all information about it
+	 * @param autos the automations
+	 * @return
+	 */
 	public JSONArray listAutomations(List<Automation>autos){
 		JSONArray json = new JSONArray();
 		for (Automation auto : autos) {
@@ -91,6 +109,11 @@ public class GuiHelper {
 		return json;
 	}
 	
+	/**
+	 * get a json object wist all the information about a given thing
+	 * @param t
+	 * @return
+	 */
 	public JSONObject thingToJson(Thing t){
 		JSONObject inner = new JSONObject();
 		inner.put("id", t.getId());
@@ -102,6 +125,11 @@ public class GuiHelper {
 		return inner;
 	}
 	
+	/**
+	 * get a image from a thing
+	 * @param t the thing
+	 * @return response can be passed the the client without checking.
+	 */
 	public Response getImageFromID(Thing t){
 		try {
 			SensorData s = t.getLastSensorData();
