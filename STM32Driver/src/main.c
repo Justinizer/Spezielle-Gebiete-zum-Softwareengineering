@@ -19,22 +19,22 @@ typedef struct {
 	const char *topic;			// Name of the topic to which the value should be published.
 	const char *value_name;		// Name of the value for output.
 	const char *unit;			// Unit of the value for output.
-	uint8_t div_by_10;			// Should the read value be divided by 10?
+	float factor;				// Factor with which the value is multiplied.
 	uint8_t value_is_float;		// Is the read value a floataing point value? (Used for output)
 } sensor_t;
 
 static const sensor_t SENSORS[] = {
-//	topic						value_name			unit		div_by_10	value_is_float
-	{"/garten/pm2_5",			"Feinstaub 2,5µm",	"µg/m³",	1,			1},
-	{"/garten/pm10",			"Feinstaub 10µm",	"µg/m³",	1,			1},
-	{"/wohnzimmer/temperatur",	"Temperatur",		"°C",		1,			1},
-	{"/wohnzimmer/feuchtigkeit","Luftfeuchte",		"%rF",		1, 			1},
-	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		0, 			0},
-	{"/wohnzimmer/helligkeit",	"Helligkeit",		NULL,		0,			0},
-	{"/wohnzimmer/mic",			"Lautstärke",		"dBa",		0,			1},
-	{"/wohnzimmer/bewegung",	"Bewegung",			NULL,		0,			0},
-	{"/kueche/voc",				"VOC",				"MOF",		0,			0},
-	{"/kueche/feuer",			"Feuer",			NULL,		0,			0}
+//	topic						value_name			unit		factor		value_is_float
+	{"/garten/pm2_5",			"Feinstaub 2,5µm",	"µg/m³",	.1f,			1},
+	{"/garten/pm10",			"Feinstaub 10µm",	"µg/m³",	.1f,			1},
+	{"/wohnzimmer/temperatur",	"Temperatur",		"°C",		.1f,			1},
+	{"/wohnzimmer/feuchtigkeit","Luftfeuchte",		"%rF",		.1f, 			1},
+	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		1.0f, 			0},
+	{"/wohnzimmer/helligkeit",	"Helligkeit",		NULL,		1.0f,				0},
+	{"/wohnzimmer/mic",			"Lautstärke",		"dBa",		126.8f,			1},
+	{"/wohnzimmer/bewegung",	"Bewegung",			NULL,		1.0f,				0},
+	{"/kueche/voc",				"VOC",				"MOF",		1.0f,				0},
+	{"/kueche/feuer",			"Feuer",			NULL,		1.0f,				0}
 };
 
 static const size_t SENSOR_SIZE = sizeof(SENSORS) / sizeof(SENSORS[0]);
@@ -237,13 +237,7 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 
 		sscanf(currentValuePtr, "%f", &value);
 
-		if (SENSORS[index].div_by_10) {
-			value /= 10.0f;
-		}
-
-		if (index == 6) {
-			value *= 126.8f;
-		}
+		value *= SENSORS[index].factor;
 
 		if (print && !printRaw) {
 			unit = (SENSORS[index].unit) ? SENSORS[index].unit : "";
