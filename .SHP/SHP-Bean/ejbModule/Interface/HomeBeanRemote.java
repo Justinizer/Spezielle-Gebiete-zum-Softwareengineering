@@ -169,5 +169,7 @@ public interface HomeBeanRemote {
 	
 	public boolean deleteThing(int Thingid);
 	
+	public boolean deleteUser();
+	
 	
 }

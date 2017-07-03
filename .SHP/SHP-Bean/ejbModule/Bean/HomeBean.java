@@ -6,6 +6,7 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateful;
+import javax.jws.soap.SOAPBinding.Use;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -81,6 +82,7 @@ public class HomeBean implements HomeBeanRemote {
 		User u = new User(email, pw);
 		em.persist(u);
 		em.flush();
+
 		return true;
 	}
 
@@ -475,6 +477,7 @@ public class HomeBean implements HomeBeanRemote {
 	 */
 	public Thing addThing(String name, String mqttTopic, ThingType type, String unit){
 		if(!isLoggedin){
+			System.out.println("is not logged in!");
 			return null;
 		}
 		Thing newThing = new Thing();
@@ -501,9 +504,21 @@ public class HomeBean implements HomeBeanRemote {
 			return false;
 		}
 		em.remove(toDel);
+		em.flush();
 		return true;
 	}
 	
+	
+	public boolean deleteUser(){
+		if(!isLoggedin){
+			System.out.println("NOT LOGGED IN!");
+			return false;
+		}	
+		User toDel = em.find(User.class,user.getID());
+		em.remove(toDel);
+		em.flush();
+		return true;
+	}
 
 
 

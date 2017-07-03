@@ -90,10 +90,10 @@ public class Gui implements Serializable {
 	@POST
 	@Path("/login")
 	@Produces("application/json")
-	public String createUser(@FormParam("email") String email, @FormParam("password") String password) {
+	public String loginUserPost(@FormParam("email") String email, @FormParam("password") String password) {
 		System.out.println("got sth");
 		System.out.println(email);
-		System.out.println(email);
+		System.out.println(password);
 		JSONObject json;
 		if (bh.checkLogin(email, password)) {
 			json = helper.getSuccess();
@@ -103,6 +103,17 @@ public class Gui implements Serializable {
 
 		return json.toString();
 	}
+	
+	@Produces("application/json")
+	@DELETE
+	@Path("/login/delete")
+	public String deleteUser() {
+		if(bh.deleteUser()){
+			return helper.getSuccess().toString();
+		}
+		return helper.getFail().toString();
+	}
+
 
 	/**
 	 * Rest Method to create a user
@@ -520,12 +531,13 @@ public class Gui implements Serializable {
 	 * @return
 	 */
 	@Produces("application/json")
-	@POST
-	@Path("thing/add")
+	@PUT
+	@Path("thing")
 	public String addThing(@FormParam("name") String name,
 			@FormParam("mqttTopic") String mqttTopic, @FormParam("type") int iType,@FormParam("unit") String unit) {
 		ThingType tt = ThingType.getByIndex(iType);
 		Thing t =bh.addThing(name, mqttTopic, tt, unit);
+		System.out.println("checking");
 		if(t == null){
 			return helper.getFail().toString();
 		}
