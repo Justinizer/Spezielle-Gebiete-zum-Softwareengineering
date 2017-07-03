@@ -4,12 +4,16 @@
 #include <stdio.h>
 #include <errno.h>
 
-int set_brightness(const char *serial_device, int brightness) {
+int set_brightness(const char *serial_device, uint8_t brightness) {
 	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_SET_BRIGHTNESS, 0x00, COMMAND_PACKET_TAIL};
 	int fd;
 
-	if (brightness < 0) {
-		brightness = 0;
+	if (!serial_device) {
+		return 1;
+	}
+
+	if (brightness > 100) {
+		brightness = 100;
 	}
 
 	packet[2] = (brightness & 0xFF);
@@ -58,10 +62,14 @@ int get_data(const char *serial_device, char *buffer, size_t buffersize) {
 	return 0;
 }
 
-int get_value_availability(const char *serial_device, char *availability) {
+int get_value_availability(const char *serial_device) {
 	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_GET_STATUS, 0x00, COMMAND_PACKET_TAIL};
 	char buffer[3];
 	int fd;
+
+	if (!serial_device) {
+		return -1;
+	}
 
 	fd = serial_open(serial_device);
 	if (fd == -1) {
@@ -78,7 +86,5 @@ int get_value_availability(const char *serial_device, char *availability) {
 	serial_read_string(fd, buffer, 3);
 	serial_close(fd);
 
-	*availability = buffer[0];
-
-	return 0;
+	return (buffer[0] == '1') ? 1 : 0;
 }
