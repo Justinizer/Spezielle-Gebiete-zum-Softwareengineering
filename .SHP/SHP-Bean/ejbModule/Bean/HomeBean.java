@@ -6,7 +6,6 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateful;
-import javax.jws.soap.SOAPBinding.Use;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -487,6 +486,7 @@ public class HomeBean implements HomeBeanRemote {
 		newThing.setUnit(unit);
 		em.persist(newThing);
 		em.flush();
+		
 		mb.reloadAutomations();
 		return newThing;
 	}

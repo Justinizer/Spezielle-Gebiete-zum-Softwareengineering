@@ -111,7 +111,8 @@ public class MqttBean extends ProtocolInterface implements MqttCallback {
 				client.subscribe(m);
 
 			}
-		}
+		}		
+		
 	}
 
 	/* (non-Javadoc)

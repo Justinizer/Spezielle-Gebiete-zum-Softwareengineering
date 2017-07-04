@@ -191,6 +191,7 @@ public class AutomationBean implements AutomationBeanRemote, Receiver {
 	public void reloadAutomations() {
 		buildTopicAutomationMap();
 
+		things = buildThingsMap();
 		Set<String> temp = things.keySet();
 		try {
 			mqtt.listento(temp.toArray(new String[temp.size()]));
