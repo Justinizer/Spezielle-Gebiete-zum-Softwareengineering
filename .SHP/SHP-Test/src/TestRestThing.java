@@ -25,8 +25,11 @@ public class TestRestThing extends TestRest {
 
 	static String newID ="";
 	
+
+	
 	@Test
 	public void a_TestGetThingsWithoutLogin() throws ClientProtocolException, IOException {
+		reset();
 		String thingString = getAllThings();
 		assertTrue(thingString.contains("fail"));
 	}

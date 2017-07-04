@@ -47,4 +47,10 @@ public class TestRest {
 		}
 		return line;
 	}
+	
+	protected void reset(){
+		httpClient = new DefaultHttpClient();
+		httpContext = new BasicHttpContext();
+		cookieStore = new BasicCookieStore();
+	}
 }
