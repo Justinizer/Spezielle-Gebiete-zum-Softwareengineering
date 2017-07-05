@@ -105,34 +105,48 @@ public class TestRestAutomation extends TestRest {
 		assertTrue(string.contains("TESTACTION"));	
 	}
 	
+	
 	@Test
-	public void x_TestDeleteCondition() throws ClientProtocolException, IOException{
+	public void w_TestDeleteCondition() throws ClientProtocolException, IOException{
 		HttpDelete del = new HttpDelete(URL +":8080/SHP-Web/rest/gui/automation/condition/" + conditionID);
 		HttpResponse responseAdd = httpClient.execute(del,httpContext);
-		String resp =  getAsString(responseAdd);	
+		String resp =  getAsString(responseAdd);
+		System.out.println("DELETE CON: " + resp);
 		assertTrue(!resp.contains("fail"));
 	}
 	
 	@Test
-	public void y_TestDeleteAction()throws ClientProtocolException, IOException{
+	public void x_TestDeleteAction()throws ClientProtocolException, IOException{
 		HttpDelete del = new HttpDelete(URL +":8080/SHP-Web/rest/gui/automation/action/" + actionID);
 		HttpResponse responseAdd = httpClient.execute(del,httpContext);
 		String resp =  getAsString(responseAdd);	
 		assertTrue(!resp.contains("fail"));
 	}
+
 	
 	
 	@Test
-	public void z_TestDeleteAutomation() throws ClientProtocolException, IOException{	
+	public void y_TestDeleteAutomation() throws ClientProtocolException, IOException{	
 		HttpPost requestAdd = new HttpPost(URL +":8080/SHP-Web/rest/gui/automation/delete");
 		List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();		 
 		nameValuePairs.add(new BasicNameValuePair("automationid", newID)); 
 		requestAdd.setEntity( new UrlEncodedFormEntity(nameValuePairs));		
 		HttpResponse responseAdd = httpClient.execute(requestAdd,httpContext);
-		String resString = getAsString(responseAdd);	
+		String resString = getAsString(responseAdd);
+		System.out.println(resString);
 		assertTrue(resString.contains("succes"));		
 	}
 	
+	
+	@Test
+	public void z_TestDeleteThing() throws ClientProtocolException, IOException{
+		/* delete thing */
+		HttpDelete requestDeleteThings = new HttpDelete(URL +":8080/SHP-Web/rest/gui/thing/" +thingID);
+		HttpResponse responseDeleteThings = httpClient.execute(requestDeleteThings,httpContext);
+		String thingDeleteString = getAsString(responseDeleteThings);
+		System.out.println(thingDeleteString);
+		assertTrue(!thingDeleteString.contains("fail"));
+	}
 	
 	
 	
