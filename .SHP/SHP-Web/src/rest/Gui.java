@@ -312,6 +312,7 @@ public class Gui implements Serializable {
 	@POST
 	@Path("automation/create")
 	public String addAutomations(@FormParam("name") String autoname, @FormParam("active") boolean active ) {
+		System.out.println("AUTOMATION IS NOW "  + active);
 		Automation a= bh.addAutomation(autoname,active);
 		System.out.println(active);
 		if(a != null){

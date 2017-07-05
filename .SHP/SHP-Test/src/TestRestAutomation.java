@@ -1,6 +1,7 @@
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -24,6 +26,7 @@ public class TestRestAutomation extends TestRest {
 	static String newID="";
 	static String thingID="";
 	static String actionID ="";
+	static String conditionID ="";
 	
 	@Test
 	public void a_TestCreateAutomationWithoutLogin() throws ClientProtocolException, IOException{						
@@ -51,7 +54,7 @@ public class TestRestAutomation extends TestRest {
 		nameValuePairs.add(new BasicNameValuePair("name", "TESTACTION")); 
 		nameValuePairs.add(new BasicNameValuePair("autoid", newID));		
 		nameValuePairs.add(new BasicNameValuePair("thing", thingID));	
-		nameValuePairs.add(new BasicNameValuePair("value", "1"));	
+		nameValuePairs.add(new BasicNameValuePair("value", "TESTACTION"));	
 		requestAdd.setEntity( new UrlEncodedFormEntity(nameValuePairs));		
 		HttpResponse responseAdd = httpClient.execute(requestAdd,httpContext);
 		String resp =  getAsString(responseAdd);	
@@ -62,9 +65,56 @@ public class TestRestAutomation extends TestRest {
 		actionID = actions.getJSONObject(0).get("id").toString();
 	}
 	
+	@Test
+	public void d_TestCreateCondition() throws  ClientProtocolException, IOException{	
+		HttpPost requestAdd = new HttpPost(URL +":8080/SHP-Web/rest/gui/automation/condition");
+		List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();		 
+		nameValuePairs.add(new BasicNameValuePair("autoid", newID)); 
+		nameValuePairs.add(new BasicNameValuePair("thingid", thingID));		
+		nameValuePairs.add(new BasicNameValuePair("type", "1"));	
+		nameValuePairs.add(new BasicNameValuePair("value", "10"));	
+		requestAdd.setEntity( new UrlEncodedFormEntity(nameValuePairs));	
+		HttpResponse responseAdd = httpClient.execute(requestAdd,httpContext);
+		String resp =  getAsString(responseAdd);	
+		
+		JSONObject thing = new JSONObject(resp);
+		
+		JSONArray cons = thing.getJSONArray("conditions");
+		assertTrue(cons.getJSONObject(0).get("value").toString().equals("10"));
+		conditionID = cons.getJSONObject(0).get("id").toString();
+	}
 	
 	@Test
-	public void y_TestDeleteCondition()throws ClientProtocolException, IOException{
+	public void e_TestAutomationWorking() throws ClientProtocolException, IOException, InterruptedException{
+		HttpPost requestCreate = new HttpPost(URL +":8080/SHP-Web/rest/gui/thing");
+		
+		List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();		 
+		nameValuePairs.add(new BasicNameValuePair("id", thingID)); //you can as many name value pair as you want in the list.
+		nameValuePairs.add(new BasicNameValuePair("value", "0"));
+		requestCreate.setEntity( new UrlEncodedFormEntity(nameValuePairs));
+		
+		HttpResponse responseCreate = httpClient.execute(requestCreate,httpContext);
+		String thingString = getAsString(responseCreate);
+		assertTrue(thingString.contains("successful"));	
+		
+		Thread.sleep(250);
+		HttpGet get = new HttpGet(URL +":8080/SHP-Web/rest/gui/thing/" + thingID);
+		HttpResponse getRest = httpClient.execute(get,httpContext);
+		String string = getAsString(getRest);
+		System.out.println(string);
+		assertTrue(string.contains("TESTACTION"));	
+	}
+	
+	@Test
+	public void x_TestDeleteCondition() throws ClientProtocolException, IOException{
+		HttpDelete del = new HttpDelete(URL +":8080/SHP-Web/rest/gui/automation/condition/" + conditionID);
+		HttpResponse responseAdd = httpClient.execute(del,httpContext);
+		String resp =  getAsString(responseAdd);	
+		assertTrue(!resp.contains("fail"));
+	}
+	
+	@Test
+	public void y_TestDeleteAction()throws ClientProtocolException, IOException{
 		HttpDelete del = new HttpDelete(URL +":8080/SHP-Web/rest/gui/automation/action/" + actionID);
 		HttpResponse responseAdd = httpClient.execute(del,httpContext);
 		String resp =  getAsString(responseAdd);	
@@ -90,7 +140,7 @@ public class TestRestAutomation extends TestRest {
 		HttpPost requestAdd = new HttpPost(URL +":8080/SHP-Web/rest/gui/automation/create");
 		List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();		 
 		nameValuePairs.add(new BasicNameValuePair("name", "TEST")); 
-		nameValuePairs.add(new BasicNameValuePair("active", "1"));		
+		nameValuePairs.add(new BasicNameValuePair("active", "TRUE"));		
 		requestAdd.setEntity( new UrlEncodedFormEntity(nameValuePairs));		
 		HttpResponse responseAdd = httpClient.execute(requestAdd,httpContext);
 		return getAsString(responseAdd);	
