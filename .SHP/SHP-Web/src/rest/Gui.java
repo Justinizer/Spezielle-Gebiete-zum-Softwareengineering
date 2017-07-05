@@ -20,7 +20,8 @@ import javax.ws.rs.core.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import Bean.Weather;
+import com.arcusweather.forecastio.Weather;
+
 import Interface.HomeBeanRemote;
 import Model.Action;
 import Model.Automation;

@@ -1,9 +1,7 @@
-package Bean;
+package com.arcusweather.forecastio;
 
 import java.io.Serializable;
 import java.util.HashMap;
-
-import com.arcusweather.forecastio.ForecastIO;
 
 /**
  * Represents the weather with position, name and icon

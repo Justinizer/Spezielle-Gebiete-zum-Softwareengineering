@@ -18,6 +18,8 @@ public class SystemConfig implements Serializable {
 
 	private String mqttServer;
 	private int timerIntervall;
+	private double latitude;
+	private double longitude;
 
 	private static final long serialVersionUID = 1L;
 
@@ -39,6 +41,14 @@ public class SystemConfig implements Serializable {
 
 	public void setTimerIntervall(int timerIntervall) {
 		this.timerIntervall = timerIntervall;
+	}
+	
+	public double getLogitude(){
+		return longitude;
+	}
+	
+	public double getLatitude(){
+		return latitude;
 	}
 
 }

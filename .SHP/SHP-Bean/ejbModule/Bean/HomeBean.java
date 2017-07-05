@@ -9,6 +9,8 @@ import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import com.arcusweather.forecastio.Weather;
+
 import Interface.HomeBeanRemote;
 import Interface.AutomationBeanRemote;
 import Model.Action;

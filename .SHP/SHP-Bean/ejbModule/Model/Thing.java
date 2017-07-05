@@ -103,6 +103,11 @@ public class Thing implements Serializable {
 		return type;
 	}
 	public String getUnit() {
+		if(unit == null)
+			return "";
+		if(unit.length() == 0)
+			return "";
+		
 		return unit;
 	}
 	public void setUnit(String unit) {

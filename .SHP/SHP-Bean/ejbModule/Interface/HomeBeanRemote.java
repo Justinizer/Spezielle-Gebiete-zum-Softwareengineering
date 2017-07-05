@@ -4,7 +4,8 @@ import java.util.List;
 
 import javax.ejb.Remote;
 
-import Bean.Weather;
+import com.arcusweather.forecastio.Weather;
+
 import Model.Action;
 import Model.Automation;
 import Model.Condition;
