@@ -52,8 +52,10 @@ public class AutomationBean implements AutomationBeanRemote, Receiver {
 	@EJB
 	HomeBeanRemote hb;
 
+	/* map mqtt topic to the correct thing */
 	private Map<String, Thing> things = new HashMap<String, Thing>();
 
+	/* map mqtt topic to a list of all affected automations */
 	private Map<String, List<Automation>> autos = new HashMap<String, List<Automation>>();
 
 	private ProtocolInterface mqtt;
@@ -205,11 +207,17 @@ public class AutomationBean implements AutomationBeanRemote, Receiver {
 		System.out.println("TEEEEEEEEEEEEEEEEEEEEST");
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.Receiver#getBrokerAddress()
+	 */
 	@Override
 	public String getBrokerAddress() {
 		return hb.getSystemConfig().getMqttServer();
 	}
 
+	/* (non-Javadoc)
+	 * @see Interface.Receiver#gotMessage(java.lang.String, java.lang.String)
+	 */
 	@Override
 	public void gotMessage(String message, String sender) {
 		System.out.println(sender + " " + message);

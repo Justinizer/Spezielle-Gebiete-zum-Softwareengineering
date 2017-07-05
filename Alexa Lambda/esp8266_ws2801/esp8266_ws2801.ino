@@ -8,7 +8,7 @@
 #define LEDLEN 34
 #define SETCOLORLEN 6
 #define ConLedPin 2
-//#define HOME 1
+#define HOME 1
 
 ESPMy myESP;
 Adafruit_WS2801 strip = Adafruit_WS2801(LEDLEN, dataPin, clockPin);

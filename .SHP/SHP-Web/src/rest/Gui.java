@@ -176,6 +176,7 @@ public class Gui implements Serializable {
 				JSONObject inner = new JSONObject();
 				inner.put("name", t.getName());
 				inner.put("id", t.getId());
+				inner.put("type", t.getType());
 				json.put(inner);
 			}
 		}
