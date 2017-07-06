@@ -14,7 +14,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
-public class TestRest {
+public abstract class TestRest {
 	String URL = "http://127.0.0.1";
 	
 	public TestRest(){

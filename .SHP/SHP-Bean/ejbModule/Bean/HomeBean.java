@@ -511,6 +511,9 @@ public class HomeBean implements HomeBeanRemote {
 	}
 	
 	
+	/* (non-Javadoc)
+	 * @see Interface.HomeBeanRemote#deleteUser()
+	 */
 	public boolean deleteUser(){
 		if(!isLoggedin){
 			System.out.println("NOT LOGGED IN!");

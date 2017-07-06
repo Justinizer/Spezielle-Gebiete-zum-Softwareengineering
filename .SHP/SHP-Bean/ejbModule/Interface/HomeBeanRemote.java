@@ -166,10 +166,27 @@ public interface HomeBeanRemote {
 	 */
 	public Weather getWeather();
 	
+	/**
+	 * add a new thing
+	 * @param name
+	 * @param mqttTopic
+	 * @param type
+	 * @param unit
+	 * @return
+	 */
 	public Thing addThing(String name, String mqttTopic, ThingType type, String unit);
 	
+	/**
+	 * delete a thing
+	 * @param Thingid
+	 * @return
+	 */
 	public boolean deleteThing(int Thingid);
 	
+	/**
+	 * delete the loggedin user
+	 * @return
+	 */
 	public boolean deleteUser();
 	
 	

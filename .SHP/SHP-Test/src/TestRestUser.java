@@ -15,6 +15,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -75,7 +76,7 @@ public class TestRestUser extends TestRest {
 	@Test
 	public void f_deleteNewUser() throws ClientProtocolException, IOException{
 		/* delete as new user */
-		HttpDelete getThings = new HttpDelete(URL +":8080/SHP-Web/rest/gui/login/delete");
+		HttpDelete getThings = new HttpDelete(URL +":8080/SHP-Web/rest/gui/login");
 		HttpResponse response2 = httpClient.execute(getThings, httpContext);		
 		String delete = getAsString(response2);
 		assertTrue(delete.contains("successful"));
@@ -86,7 +87,7 @@ public class TestRestUser extends TestRest {
 	@Test 
 	public void g_createNewUserWrongParamter() throws ClientProtocolException, IOException{		
 		/* create new user */
-		HttpPut requestCreate = new HttpPut(URL +":8080/SHP-Web/rest/gui/login");
+		HttpPost requestCreate = new HttpPost(URL +":8080/SHP-Web/rest/gui/login");
 		List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();		 
 		nameValuePairs.add(new BasicNameValuePair("email", "fail")); //you can as many name value pair as you want in the list.
 		nameValuePairs.add(new BasicNameValuePair("password", "fail"));

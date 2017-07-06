@@ -82,11 +82,12 @@ public class Gui implements Serializable {
 		return json.toString();
 	}
 
+
 	/**
-	 * create a new user
-	 * @param email the new email address
-	 * @param password the new password
-	 * @return Success if user is created
+	 * Login a user with a POST 
+	 * @param email
+	 * @param password
+	 * @return
 	 */
 	@POST
 	@Path("/login")
@@ -105,9 +106,13 @@ public class Gui implements Serializable {
 		return json.toString();
 	}
 	
+	/**
+	 * DELETE the logged in user
+	 * @return
+	 */
 	@Produces("application/json")
 	@DELETE
-	@Path("/login/delete")
+	@Path("/login")
 	public String deleteUser() {
 		if(bh.deleteUser()){
 			return helper.getSuccess().toString();
@@ -438,6 +443,14 @@ public class Gui implements Serializable {
 	}
 	
 	
+	/**
+	 * update a condition
+	 * @param conditionID 
+	 * @param thingid
+	 * @param value
+	 * @param ct the conditiotype
+	 * @return
+	 */
 	@Produces("application/json")
 	@POST
 	@Path("automation/condition/{id}")
@@ -475,6 +488,11 @@ public class Gui implements Serializable {
 		}
 	}
 	
+	/**
+	 * delete an automation
+	 * @param autoid
+	 * @return
+	 */
 	@Produces("application/json")
 	@POST
 	@Path("automation/delete")	
