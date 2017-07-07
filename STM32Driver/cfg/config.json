@@ -1,0 +1,63 @@
+{
+	"mqtt_client_id": "controller0",
+	"broker_address": "tcp://192.168.1.1:1883",
+	"sensors": [
+        {
+            "topic": "/garten/pm2_5",
+            "valuename": "Feinstaub 2,5µm",
+            "unit": "µg/m³",
+            "factor": 0.1,
+            "is_float": true
+        }, {
+            "topic": "/garten/pm10",
+            "valuename": "Feinstaub 10µm",
+            "unit": "µg/m³",
+            "factor": 0.1,
+            "is_float": true
+        }, {
+            "topic": "/wohnzimmer/temperatur",
+            "valuename": "Temperatur",
+            "unit": "°C",
+            "factor": 0.1,
+            "is_float": true
+        }, {
+            "topic": "/wohnzimmer/feuchtigkeit",
+            "valuename": "Luftfeuchte",
+            "unit": "%rF",
+            "factor": 0.1,
+            "is_float": true
+        }, {
+            "topic": "/wohnzimmer/bodenfeuchte",
+            "valuename": "Bodenfeuchte",
+            "factor": 1.0,
+            "is_float": false
+        }, {
+            "topic": "/wohnzimmer/helligkeit",
+            "valuename": "Helligkeit",
+            "factor": 1.0,
+            "is_float": false
+        }, {
+            "topic": "/wohnzimmer/mic",
+            "valuename": "Lautstärke",
+			"unit": "dBa",
+            "factor": 126.8,
+            "is_float": true
+        }, {
+            "topic": "/wohnzimmer/bewegung",
+            "valuename": "Bewegung",
+            "factor": 1.0,
+            "is_float": false
+        }, {
+            "topic": "/kueche/voc",
+            "valuename": "VOC",
+			"unit": "MOF",
+            "factor": 1.0,
+            "is_float": false
+        }, {
+            "topic": "/kueche/feuer",
+            "valuename": "Feuer",
+            "factor": 1.0,
+            "is_float": false
+        }
+    ]
+}
