@@ -238,14 +238,10 @@ static int load_sensor_configs() {
 		sensors[i].unit = (unit) ? strdup(unit) : NULL;
 		sensors[i].factor = json_object_get_number(arr_obj, "factor");
 		sensors[i].value_is_float = (is_float == -1) ? 1 : is_float;
-
-		printf("Topic: %s\n", json_object_get_string(arr_obj, "topic"));
 	}
-
 
 	printf("Client ID: %s\n", json_object_get_string(obj, "mqtt_client_id"));
 	printf("Broker address: %s\n", broker_address);
-
 
 	json_value_free(root);
 	return 0;
@@ -282,7 +278,9 @@ static int read_values_from_sensors(char *buffer, size_t buffersize) {
 	data1_len = strlen(buffer);
 	buffer[data1_len] = ';';
 
-	get_data(serial1, buffer + data1_len + 1, RECEIVE_BUFFER_SIZE - data1_len - 1);
+	if (get_data(serial1, buffer + data1_len + 1, RECEIVE_BUFFER_SIZE - data1_len - 1) == 1) {
+		buffer[data1_len] = '\0';
+	}
 
 	return 0;
 }
@@ -301,6 +299,10 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 		if (open_mqtt_connection(&client, broker_address, CLIENT_ID) == 1) {
 			return 1;
 		}
+	}
+
+	if (printRaw) {
+		printf("Raw values: %s\n", value_buffer);
 	}
 
 	currentValuePtr = strtok(value_buffer, ";");
