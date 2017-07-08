@@ -35,9 +35,12 @@ public class TestRestAutomation extends TestRest {
 	
 	@Test
 	public void b_TestCreateAutomation() throws ClientProtocolException, IOException{	
-		httpContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
-		login();		
+		
+		if(!login()){
+			fail();
+		}
 		String answer = createTestAutomation();
+		System.out.println("b: " + answer);
 		assertTrue(answer.contains("successful"));			
 		JSONObject obj =  new JSONObject(answer);
 		newID = obj.get("id").toString();
@@ -97,7 +100,7 @@ public class TestRestAutomation extends TestRest {
 		String thingString = getAsString(responseCreate);
 		assertTrue(thingString.contains("successful"));	
 		
-		Thread.sleep(250);
+		Thread.sleep(1250);
 		HttpGet get = new HttpGet(URL +":8080/SHP-Web/rest/gui/thing/" + thingID);
 		HttpResponse getRest = httpClient.execute(get,httpContext);
 		String string = getAsString(getRest);

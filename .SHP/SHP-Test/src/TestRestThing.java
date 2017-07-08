@@ -94,11 +94,11 @@ public class TestRestThing extends TestRest {
 	@Test
 	public void e_TestGetValue() throws ClientProtocolException, IOException, InterruptedException{
 		//give the server some time to receive the mqtt message
-		Thread.sleep(250);
+		Thread.sleep(1500);
 		HttpGet requestCreate = new HttpGet(URL +":8080/SHP-Web/rest/gui/thing/" + newID);
 		HttpResponse responseCreate = httpClient.execute(requestCreate,httpContext);
 		String thingString = getAsString(responseCreate);
-		System.out.println(thingString);
+		System.out.println("e_testGetValue: " + thingString);
 		assertTrue(thingString.contains("MYFRISTTESTVALUE"));	
 	}
 	

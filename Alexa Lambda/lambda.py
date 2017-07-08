@@ -2,11 +2,14 @@
 import urllib
 import json
 import math
+import logging
 
-ngrok = "https://016f1d78.ngrok.io"
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+ngrok = "https://beaaa1b0.ngrok.io"
 actors ={}
 def lambda_handler(event, context):
- 
+
     if str(event['header']['namespace']) == 'Alexa.ConnectedHome.Discovery':
         return handleDiscovery(context, event)
 
@@ -25,7 +28,7 @@ def handleDiscovery(context, event):
     	actors = json.loads(myactors)
     	payload = {"discoveredAppliances":[]}
     	digitalFunctions = ["turnOn", "turnOff", "setColor" ]
-    	analogFunctions = ["turnOn", "turnOff",	"setTargetTemperature"]
+    	analogFunctions = ["turnOn", "turnOff",	"setTargetTemperature", "setPercentage"]
 
     	for actor in actors:
     		function =[]
@@ -56,9 +59,7 @@ def handleControl(context, event):
     device_id = event['payload']['appliance']['applianceId']
     message_id = event['header']['messageId']
     actor = getActor(device_id)
-    previous_temperature = 21.0
-    minimum_temperature = 5.0
-    maximum_temperature = 30.0
+    
 
     if event['header']['name'] == 'TurnOnRequest':
         if actor['type'] == "AnalogActor":
@@ -66,12 +67,13 @@ def handleControl(context, event):
         else:
             urllib.urlopen(ngrok + "/SHP-Web/rest/gui/thing/" + str(device_id) + "/1/a/a"  ).read()            
         payload = { }
-        header = {"namespace":"Alexa.ConnectedHome.Control","name":"TurnOnConfirmation","payloadVersion":"2", "messageId": message_id }
+        header = generateResponseHeader(event, "TurnOnConfirmation")
     
     if event['header']['name'] == 'TurnOffRequest':
         urllib.urlopen(ngrok + "/SHP-Web/rest/gui/thing/" + str(device_id) + "/0/a/a"  ).read()
         payload = {}
-        header = {"namespace":"Alexa.ConnectedHome.Control", "name":"TurnOffConfirmation", "payloadVersion":"2", "messageId": message_id }
+        header = generateResponseHeader(event, "TurnOffConfirmation")
+        
 		
     if event['header']['name'] == 'SetColorRequest':
         rgb = getRGB(event)
@@ -81,10 +83,17 @@ def handleControl(context, event):
     if event['header']['name'] == 'SetTargetTemperatureRequest': 
         target_temperature = event['payload']['targetTemperature']['value']
         urllib.urlopen(ngrok + "/SHP-Web/rest/gui/thing/" + str(device_id) + "/" + str(target_temperature) +"/a/a"  ).read()
-        previous_mode = 'CUSTOM'
-        target_mode = 'CUSTOM'
-        response = generateTemperatureResponse(event,previous_temperature,previous_mode,target_mode,minimum_temperature,maximum_temperature)
-        return response
+        return  generateTemperatureResponse(event,target_temperature)
+    if event['header']['name'] == 'SetPercentageRequest': 
+        value = event['payload']['percentageState']['value']
+        urllib.urlopen(ngrok + "/SHP-Web/rest/gui/thing/" + str(device_id) + "/" + str(value) +"/a/a"  ).read()
+        header = generateResponseHeader(event, "SetPercentageConfirmation")
+        logger.info('setPer')
+        payload = {}
+       # return  generateTemperatureResponse(event,value)
+    
+        
+        
 
     return { 'header': header, 'payload': payload }
 	
@@ -106,7 +115,12 @@ def generateResponse(header,payload):
     }
     return response
 
-def generateTemperatureResponse(request,previous_temperature,previous_mode,target_mode,minimum_temperature,maximum_temperature):
+def generateTemperatureResponse(request,target_temperature):
+    previous_temperature = 21.0
+    minimum_temperature = 5.0
+    maximum_temperature = 30.0
+    previous_mode = 'CUSTOM'
+    target_mode = 'CUSTOM'
     request_name = request['header']['name']
     message_id = request['header']['messageId']
     
@@ -138,7 +152,7 @@ def generateTemperatureResponse(request,previous_temperature,previous_mode,targe
                 }
             }        
         }
-
+    
     header = generateResponseHeader(request,response_name)
     response = generateResponse(header,payload)
     return response

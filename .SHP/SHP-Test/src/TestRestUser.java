@@ -64,11 +64,13 @@ public class TestRestUser extends TestRest {
 	}
 	
 	@Test
-	public void e_loginNewUser() throws ClientProtocolException, IOException{
+	public void e_loginNewUser() throws ClientProtocolException, IOException, InterruptedException{
+		Thread.sleep(250);
 		/* login as new user */
 		HttpGet requestLogin = new HttpGet(URL +":8080/SHP-Web/rest/gui/login/asd@asd.de/qwertzuiop");
 		HttpResponse responseLogin = httpClient.execute(requestLogin,httpContext);
 		String login = getAsString(responseLogin);
+		System.out.println("loginAnswer:" + login);
 		assertTrue(login.contains("successful"));
 		System.out.println("login");		
 		

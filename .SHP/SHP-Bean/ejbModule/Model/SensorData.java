@@ -32,7 +32,7 @@ public class SensorData implements Serializable {
 	
 	public SensorData(String value, Thing t){
 		time = (int) (System.currentTimeMillis() / 1000L);
-		this.value = value;
+		this.value = value.replace("\\", "\\\\");
 		this.thing = t;
 	}
 	

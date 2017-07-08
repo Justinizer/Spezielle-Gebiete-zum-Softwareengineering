@@ -482,7 +482,7 @@ function deleteAutomation(){
 }
 
 function getAndDisplayDataInChart(thingId, name) {
-	$.getJSON(baseUrl + '/thing/' + thingId, function(result) {
+	$.getJSON(baseUrl + '/thing/' + thingId +'/1', function(result) {
 		console.log(thingId);
 
 		var data = [['Zeit', 'Wert']];

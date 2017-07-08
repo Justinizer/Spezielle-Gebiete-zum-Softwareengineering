@@ -9,14 +9,15 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
 public abstract class TestRest {
-	String URL = "http://127.0.0.1";
-	
+//	String URL = "http://127.0.0.1";
+	String URL = "http://192.168.1.1";
 	public TestRest(){
 		
 	}
@@ -28,9 +29,11 @@ public abstract class TestRest {
 
 	protected boolean login() throws ClientProtocolException, IOException{
 		/* login as standard user */
+		reset();
 		HttpGet requestCreate = new HttpGet(URL +":8080/SHP-Web/rest/gui/login/a/a");		
 		HttpResponse responseLogin = httpClient.execute(requestCreate,httpContext);
 		String create = getAsString(responseLogin);
+		System.out.println(create);
 		return create.contains("successful");
 	}
 	
@@ -52,5 +55,6 @@ public abstract class TestRest {
 		httpClient = new DefaultHttpClient();
 		httpContext = new BasicHttpContext();
 		cookieStore = new BasicCookieStore();
+		httpContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
 	}
 }

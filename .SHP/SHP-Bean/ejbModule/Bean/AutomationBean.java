@@ -222,7 +222,7 @@ public class AutomationBean implements AutomationBeanRemote, Receiver {
 	public void gotMessage(String message, String sender) {
 		System.out.println(sender + " " + message);
 		Thing databaseThing = things.get(sender);
-		SensorData data = new SensorData(message.replace("\\", "\\\\"), databaseThing);
+		SensorData data = new SensorData(message, databaseThing);
 
 		/*
 		 * warum ich den umweg über die hb gehe und nicht einfach
