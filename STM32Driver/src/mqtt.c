@@ -65,7 +65,7 @@ int mqtt_send_value(MQTTClient *client, const char *topic, float value) {
 	}
 
 	msg.qos = 1;
-	msg.retained = 1;
+	msg.retained = 0;
 
 	snprintf(valueBuffer, 10, "%.1f", value);
 	msg.payload = valueBuffer;
