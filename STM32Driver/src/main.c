@@ -10,6 +10,7 @@
 #include "daemonize.h"
 #include "commands.h"
 #include "serial.h"
+#include "parson.h"
 #include "mqtt.h"
 
 #define RECEIVE_BUFFER_SIZE	100
@@ -23,26 +24,16 @@ typedef struct {
 	uint8_t value_is_float;		// Is the read value a floataing point value? (Used for output)
 } sensor_t;
 
-static const sensor_t SENSORS[] = {
-//	topic						value_name			unit		factor		value_is_float
-	{"/garten/pm2_5",			"Feinstaub 2,5µm",	"µg/m³",	.1f,			1},
-	{"/garten/pm10",			"Feinstaub 10µm",	"µg/m³",	.1f,			1},
-	{"/wohnzimmer/temperatur",	"Temperatur",		"°C",		.1f,			1},
-	{"/wohnzimmer/feuchtigkeit","Luftfeuchte",		"%rF",		.1f, 			1},
-	{"/wohnzimmer/bodenfeuchte","Bodenfeuchte",		NULL,		1.0f, 			0},
-	{"/wohnzimmer/helligkeit",	"Helligkeit",		NULL,		1.0f,				0},
-	{"/wohnzimmer/mic",			"Lautstärke",		"dBa",		126.8f,			1},
-	{"/wohnzimmer/bewegung",	"Bewegung",			NULL,		1.0f,				0},
-	{"/kueche/voc",				"VOC",				"MOF",		1.0f,				0},
-	{"/kueche/feuer",			"Feuer",			NULL,		1.0f,				0}
-};
 
-static const size_t SENSOR_SIZE = sizeof(SENSORS) / sizeof(SENSORS[0]);
 static const char *DEFAULT_BROKER_ADDRESS = "tcp://broker.hivemq.com:1883";
+static const char *CLIENT_ID = "stm32driver";
+static const char *CONFIG_FILE_PATH = "cfg/config.json";
+const char *BRIGHTNESS_TOPIC = "/wohnzimmer/led/rot";
 const char *serial0 = "/dev/ttyAMA0";
 const char *serial1 = "/dev/ttyACM0";
-static const char *CLIENT_ID = "stm32driver";
-const char *BRIGHTNESS_TOPIC = "/wohnzimmer/led/rot";
+
+sensor_t *sensors = NULL;
+size_t sensors_size = 0;
 
 int daemonizeFlag = 0;
 int getDataFlag = 0;
@@ -67,6 +58,8 @@ static const struct option program_options[] = {
 };
 
 static void print_help(const char *progname);
+static int load_sensor_configs();
+static int read_values_from_sensors(char *buffer, size_t buffersize);
 static int get_and_print_data(int publish, int print, int printRaw);
 
 int main(int argc, char *argv[]) {
@@ -78,6 +71,8 @@ int main(int argc, char *argv[]) {
 		print_help(argv[0]);
 		return 0;
 	}
+
+	load_sensor_configs();
 
 	while ((c = getopt_long(argc, argv, "b:dghprs:", program_options, &optionIndex)) != -1) {
 
@@ -138,12 +133,12 @@ int main(int argc, char *argv[]) {
 		}
 
 		result = open_mqtt_connection(&client, broker_address, CLIENT_ID);
-		if (result == 1) {
-			syslog(LOG_ERR, "Error connecting to broker. Shutting down.");
-			exit(1);
+		if (result == 0) {
+			syslog(LOG_INFO, "Successfully connected to broker (%s)", broker_address);
 
 		} else {
-			syslog(LOG_INFO, "Successfully connected to broker (%s)", broker_address);
+			syslog(LOG_ERR, "Error connecting to broker. Shutting down.");
+			exit(1);
 		}
 
 		result = MQTTClient_subscribe(client, BRIGHTNESS_TOPIC, 1);
@@ -181,15 +176,84 @@ static void print_help(const char *progname) {
 	printf("  -s, --set-brightness <value>    Set brightness to <value>\n\n");
 }
 
-static int get_and_print_data(int publish, int print, int printRaw) {
-	char *currentValuePtr;
-	const char *unit;
-	size_t index = 0;
-	char buffer[RECEIVE_BUFFER_SIZE];
-	size_t data1_len;
-	float value;
+static int load_sensor_configs() {
+	JSON_Value *root;
+	JSON_Object *obj;
+	JSON_Array *sensor_array;
+	char *broker_addr;
+
+	root = json_parse_file(CONFIG_FILE_PATH);
+	if (json_value_get_type(root) != JSONObject) {
+		if (daemonizeFlag) {
+			syslog(LOG_ERR, "Couldn't read config file!");
+
+		} else {
+			printf("Couldn't read config file!\n");
+		}
+
+		exit(1);
+	}
+
+	obj = json_value_get_object(root);
+	broker_addr = (char *) json_object_get_string(obj, "broker_address");
+	if (broker_addr) {
+		broker_address = strdup(broker_addr);
+
+	} else {
+		broker_address = (char *) DEFAULT_BROKER_ADDRESS;
+	}
+
+
+	sensor_array = json_object_get_array(obj, "sensors");
+	sensors = calloc(json_array_get_count(sensor_array), sizeof(sensor_t));
+	if (!sensors) {
+		if (daemonizeFlag) {
+			syslog(LOG_ERR, "Error while allocating memory: %s", strerror(errno));
+			
+		} else {
+			printf("Error while allocating memory: %s\n", strerror(errno));
+		}
+
+		exit(1);
+	}
+
+
+	sensors_size = json_array_get_count(sensor_array);
+	for (int i = 0; i < sensors_size; i++) {
+		JSON_Object *arr_obj = json_array_get_object(sensor_array, i);
+
+		const char *topic = json_object_get_string(arr_obj, "topic");
+		const char *value = json_object_get_string(arr_obj, "valuename");
+		const char *unit = json_object_get_string(arr_obj, "unit");
+		int is_float = json_object_get_boolean(arr_obj, "is_float");
+
+		if (!topic || !value) {
+			printf("topic or value at index %d not in json file!\n", i);
+			json_value_free(root);
+			exit(1);
+		}
+
+		sensors[i].topic = strdup(topic);
+		sensors[i].value_name = strdup(value);
+		sensors[i].unit = (unit) ? strdup(unit) : NULL;
+		sensors[i].factor = json_object_get_number(arr_obj, "factor");
+		sensors[i].value_is_float = (is_float == -1) ? 1 : is_float;
+	}
+
+	printf("Client ID: %s\n", json_object_get_string(obj, "mqtt_client_id"));
+	printf("Broker address: %s\n", broker_address);
+
+	json_value_free(root);
+	return 0;
+}
+
+static int read_values_from_sensors(char *buffer, size_t buffersize) {
 	int availability;
-	int result;
+	size_t data1_len;
+
+	if (!buffer || buffersize == 0) {
+		return 1;
+	}
 
 	availability = get_value_availability(serial0);
 	if (availability == -1) {
@@ -204,7 +268,7 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 			printf("No values available.\n");
 		}
 
-		return 0;
+		return 1;
 	}
 
 	if (get_data(serial0, buffer, RECEIVE_BUFFER_SIZE) == 1) {
@@ -215,37 +279,46 @@ static int get_and_print_data(int publish, int print, int printRaw) {
 	buffer[data1_len] = ';';
 
 	if (get_data(serial1, buffer + data1_len + 1, RECEIVE_BUFFER_SIZE - data1_len - 1) == 1) {
+		buffer[data1_len] = '\0';
+	}
+
+	return 0;
+}
+
+static int get_and_print_data(int publish, int print, int printRaw) {
+	char value_buffer[RECEIVE_BUFFER_SIZE];
+	char *currentValuePtr;
+	size_t index = 0;
+	float value;
+
+	if (read_values_from_sensors(value_buffer, RECEIVE_BUFFER_SIZE) == 1) {
 		return 1;
 	}
 
-	if (print && printRaw) {
-		printf("%s\n", buffer);
-	} 
-
-
 	if (publish && !daemonizeFlag) {
-		result = open_mqtt_connection(&client, broker_address, CLIENT_ID);
-
-		if (result == 1) {
+		if (open_mqtt_connection(&client, broker_address, CLIENT_ID) == 1) {
 			return 1;
 		}
 	}
 
+	if (printRaw) {
+		printf("Raw values: %s\n", value_buffer);
+	}
 
-	currentValuePtr = strtok(buffer, ";");
-	while (currentValuePtr && index < SENSOR_SIZE) {
+	currentValuePtr = strtok(value_buffer, ";");
+	while (currentValuePtr && index < sensors_size) {
 
 		sscanf(currentValuePtr, "%f", &value);
 
-		value *= SENSORS[index].factor;
+		value *= sensors[index].factor;
 
-		if (print && !printRaw) {
-			unit = (SENSORS[index].unit) ? SENSORS[index].unit : "";
-			printf("%s: %4.*f %s\n", SENSORS[index].value_name, SENSORS[index].value_is_float, value, unit);
+		if (print) {
+			const char *unit = (sensors[index].unit) ? sensors[index].unit : "";
+			printf("%s: %4.*f %s\n", sensors[index].value_name, sensors[index].value_is_float, value, unit);
 		}
 
 		if (publish) {
-			if (mqtt_send_value(&client, SENSORS[index].topic, value) == 1) {
+			if (mqtt_send_value(&client, sensors[index].topic, value) == 1) {
 				break;
 			}
 		}

@@ -5,7 +5,7 @@
 #include <errno.h>
 
 int set_brightness(const char *serial_device, uint8_t brightness) {
-	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_SET_BRIGHTNESS, 0x00, COMMAND_PACKET_TAIL};
+	char packet[] = {COMMAND_PACKET_HEADER, COMMAND_SET_BRIGHTNESS, 0x00, COMMAND_PACKET_TAIL};
 	int fd;
 
 	if (!serial_device) {
@@ -36,7 +36,7 @@ int set_brightness(const char *serial_device, uint8_t brightness) {
 }
 
 int get_data(const char *serial_device, char *buffer, size_t buffersize) {
-	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_GET_DATA, 0x00, COMMAND_PACKET_TAIL};
+	char packet[] = {COMMAND_PACKET_HEADER, COMMAND_GET_DATA, 0x00, COMMAND_PACKET_TAIL};
 	int fd;
 
 	if (!serial_device || !buffer || buffersize == 0) {
@@ -63,7 +63,7 @@ int get_data(const char *serial_device, char *buffer, size_t buffersize) {
 }
 
 int get_value_availability(const char *serial_device) {
-	char packet[4] = {COMMAND_PACKET_HEADER, COMMAND_GET_STATUS, 0x00, COMMAND_PACKET_TAIL};
+	char packet[] = {COMMAND_PACKET_HEADER, COMMAND_GET_STATUS, 0x00, COMMAND_PACKET_TAIL};
 	char buffer[3];
 	int fd;
 

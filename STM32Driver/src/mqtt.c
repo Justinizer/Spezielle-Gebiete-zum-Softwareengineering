@@ -107,10 +107,10 @@ int mqtt_message_arrived(void *context, char *topicName, int topicLen, MQTTClien
 			syslog(LOG_INFO, "Received message: %s", msgBuffer);
 
 			int brightness;
-			int elements;
+			int parsedValues;
 
-			elements = sscanf(msgBuffer, "%d", &brightness);
-			if (elements == 1) {
+			parsedValues = sscanf(msgBuffer, "%d", &brightness);
+			if (parsedValues == 1) {
 
 				syslog(LOG_INFO, "Setting brightness to %d", brightness);
 				set_brightness(serial0, brightness);
