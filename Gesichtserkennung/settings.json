@@ -1,0 +1,22 @@
+{
+	"VideoID": 0,
+	"AbortKey": 27,
+	"PictureKey": 98,
+	"PathHaarCascade": "/home/justin/opencv-3.2.0/data/haarcascades/haarcascade_frontalface_default.xml",
+	"PathPictureFolder": "/home/justin/CLionProjects/Gesichtserkennung/Pictures",
+	"GPIORedLED": 0,
+    "GPIOGreenLED": 2,
+	"GPIOYellowLED": 1,
+    "GPIOButton1": 3,
+	"DefaultImgWidth": 380,
+	"DefaultImgHeight": 240,
+	"RecognizedConfidence": 50,
+	"UnrecognizedConfidence": 100,
+    "Host": "localhost",
+    "DatabaseUser": "root",
+    "DatabasePassword": "20522556",
+	"MQTTAddress": "tcp://192.168.1.1",
+    "MQTTClientID": "FaceRecognizer",
+    "MQTTTopic": "/garten/kamera",
+	"MQTTMessage": " is at the door."
+}

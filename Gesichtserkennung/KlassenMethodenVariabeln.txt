@@ -1,0 +1,25 @@
+
+
+
+Was brauchen wir für Klassen/Methoden/Variabeln im Projekt?
+
+Klassen:
+FaceDetection - Eine Klasse, die Gesichter in Frames/Bilder erkennt.
+FaceRecognizer - Eine Klasse, die erkennt, ob ein Gesicht zu einer Person gehört.
+
+ImageProcessor
+-> Bild in Grau verwandeln
+-> Frame aufnehmen.
+-> 
+SavedFace (Eigenface OR Fisherface OR LPGH)
+DetectedFace
+
+Methoden:
+detectFaces
+recognizeFaces
+main
+
+Variabeln:
+frame - Der aktuelle BildFrame.
+detectedFaces - Ein Array mit erkannten Gesichtern.
+savedFaces - Ein Array mit gespeicherten Gesichtern.
