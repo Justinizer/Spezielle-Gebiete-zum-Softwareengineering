@@ -103,7 +103,7 @@ int main() {
             ImageHandler::toGray(&gray);
             //Face or faces detected from the gray scaled frame.
             fd.detectFacesOfFrame(gray, &faces);
-            //Wenn at least one face detected, it is cut from the frame, resized and send to be recognized.
+            //If at least one face detected, it is cut from the frame, resized and send to be recognized.
             //Then, users confidence number are updated.
             if (faces.size() > 0) {
                 frames = ImageHandler::cropFrameToFaceFrames(faces, gray);
@@ -117,7 +117,7 @@ int main() {
             //ImageHandler::drawRectangleAroundFaces(faces, &frame);
             //cv::imshow("video", frame);
 
-            //Wenn "b" key is pushed, a picture is taken and saved into a file.
+            //If "b" key is pushed, a picture is taken and saved into a file.
             key = (char) cv::waitKey(20);
             if (key == jsSettings->getPictureKey()) {
                 FileHandler::savePictures(frames, "");
@@ -126,7 +126,7 @@ int main() {
             //Next function is called to adjust the LED condition according to new confidence number and to send a MQTT message to show which user at the door.
             adjustLEDState(users, jsSettings, rpi, mqttClient);
 
-            //Wenn "escape" key is pushed, the face recognition cycle is terminated.
+            //If "escape" key is pushed, the face recognition cycle is terminated.
             if (key == jsSettings->getAbortKey()) break;
             usleep(0.1);
         }
